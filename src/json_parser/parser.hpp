@@ -10,7 +10,7 @@ struct LayoutVar {
 };
 
 struct LayoutsDef {
-    std::map<std::string, LayoutVar variants; // "Full", "Compact", "Tiny"
+    std::map<std::string, LayoutVar> variants; // "Full", "Compact", "Tiny"
 };
 
 LayoutsDef parseLayouts(const nlohmann::json& j);
