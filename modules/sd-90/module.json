@@ -1,0 +1,43 @@
+{
+  "id": "sd90",
+  "name": "Edirol SD-90",
+  "manufacturer": 65,
+  "model": 72,
+  "device_id": 16,
+  "checksum": "roland",
+  "packet": "F0 41 [DEVICE] 00 48 [COMMAND] [ADDRESS] [DATA] [CHECKSUM] F7",
+
+  "objects": [
+
+    { "id": "volume",            "kind": "cc", "cc": 7 },
+    { "id": "pan",               "kind": "cc", "cc": 10, "display": { "offset": -64, "transform": "pan_lcr" } },
+    { "id": "pitch",             "kind": "pitchbend", "display": { "offset": -64 } },
+    { "id": "cutoff",            "kind": "cc", "cc": 74, "display": { "offset": -64 } },
+    { "id": "resonance",         "kind": "cc", "cc": 71, "display": { "offset": -64 } },
+    { "id": "attack",            "kind": "cc", "cc": 73, "display": { "offset": -64 } },
+    { "id": "decay",             "kind": "cc", "cc": 75, "display": { "offset": -64 } },
+    { "id": "release",           "kind": "cc", "cc": 72, "display": { "offset": -64 } },
+    { "id": "vibrato_rate",      "kind": "cc", "cc": 76, "display": { "offset": -64 } },
+    { "id": "vibrato_depth",     "kind": "cc", "cc": 77, "display": { "offset": -64 } },
+    { "id": "vibrato_delay",     "kind": "cc", "cc": 78, "display": { "offset": -64 } },
+    { "id": "reverb_send",       "kind": "cc", "cc": 91 },
+    { "id": "chorus_send",       "kind": "cc", "cc": 93 },
+    { "id": "portamento_time",   "kind": "cc", "cc": 5 },
+    { "id": "portamento_switch", "kind": "cc", "cc": 65 },
+
+    { "id": "tune",           "kind": "sysex", "address": "09", "display": { "offset": -64 } },
+    { "id": "output_assign",  "kind": "sysex", "address": "1F", "lookup": "output_assign" },
+    { "id": "mfx",            "kind": "sysex", "address": "20", "lookup": "mfx_select" },
+    { "id": "master_volume",  "kind": "sysex", "address": "01000005" },
+    { "id": "master_tune",    "kind": "sysex", "address": "01000000", "bytes": 4, "encoding": "nibbles", "display": { "transform": "frequency" } },
+    { "id": "transpose",      "kind": "sysex", "address": "01000004", "display": { "offset": -24 } },
+    { "id": "out_rout",       "kind": "sysex", "address": "02101000" },
+    { "id": "bypass",         "kind": "sysex", "address": "02101143", "lookup": "bypass" },
+    { "id": "reverb",         "kind": "sysex", "address": "10000400", "lookup": "reverb_types" },
+    { "id": "chorus",         "kind": "sysex", "address": "10000200", "lookup": "chorus_types" },
+    { "id": "mfx_a",          "kind": "sysex", "address": "11000600", "lookup": "mfx_types" },
+    { "id": "mfx_b",          "kind": "sysex", "address": "11200600", "lookup": "mfx_types" },
+    { "id": "mfx_c",          "kind": "sysex", "address": "11400600", "lookup": "mfx_types" },
+    { "id": "afx",            "kind": "sysex", "address": "02102000", "lookup": "afx_types" }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "xg",
+  "name": "XGlite",
+  "objects": [
+
+    {
+        "id": "patch",
+        "kind": "patch",
+        "sequence": ["cc0", "cc32", "pc"],
+        "fields": { "msb": 0, "lsb": 0, "program": 0 },
+        "bank_select": { "msb": "bank", "lsb": "variation" }
+    },
+
+    { "id": "volume",             "kind": "cc", "cc": 7 },
+    { "id": "pan",                "kind": "cc", "cc": 10, "display": { "offset": -64, "transform": "pan_lcr"} },
+    { "id": "pitch",              "kind": "pitchbend", "display": { "offset": -64 } },
+    { "id": "expression",         "kind": "cc", "cc": 11 },
+    { "id": "modulation",         "kind": "cc", "cc": 1 },
+    { "id": "sustain",            "kind": "cc", "cc": 64 },
+    { "id": "portamento_time",    "kind": "cc", "cc": 5 },
+    { "id": "portamento_switch",  "kind": "cc", "cc": 65 },
+    { "id": "resonance",          "kind": "cc", "cc": 71, "display": { "offset": -64 } },
+    { "id": "release",            "kind": "cc", "cc": 72, "display": { "offset": -64 } },
+    { "id": "attack",             "kind": "cc", "cc": 73, "display": { "offset": -64 } },
+    { "id": "cutoff",             "kind": "cc", "cc": 74, "display": { "offset": -64 } },
+    { "id": "decay",              "kind": "cc", "cc": 75, "display": { "offset": -64 } },
+    { "id": "vibrato_rate",       "kind": "cc", "cc": 76, "display": { "offset": -64 } },
+    { "id": "vibrato_depth",      "kind": "cc", "cc": 77, "display": { "offset": -64 } },
+    { "id": "vibrato_delay",      "kind": "cc", "cc": 78, "display": { "offset": -64 } },
+    { "id": "reverb_send",        "kind": "cc", "cc": 91 },
+    { "id": "chorus_send",        "kind": "cc", "cc": 93 },
+    { "id": "delay_send",         "kind": "cc", "cc": 94 },
+    { "id": "master_volume",      "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] F7" },
+    { "id": "sustain_global",     "kind": "cc", "cc": 64 },
+    { "id": "system_reset",        "kind": "sysex", "data": "F0 43 10 4C 00 00 7E 00 F7" }
+  ]
+}

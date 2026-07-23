@@ -1,0 +1,40 @@
+{
+  "full": {
+    "views": {
+      "channels": [
+        "patch", "volume", "pan", "pitch", "tune", "cutoff", "resonance", 
+        "attack", "decay", "release", "chorus_send", "reverb_send", 
+        "output_assign", "mfx", "vibrato_depth", "vibrato_rate", 
+        "vibrato_delay", "portamento_switch", "portamento_time"
+      ],
+      "system_fx": [
+        "reverb", "chorus", "afx", "mfx_a", "mfx_b", "mfx_c"
+      ],
+      "master_output": [
+        "master_tune", "transpose", "master_volume", "out_rout", "bypass"
+      ]
+    },
+    "widgets": {
+      "mfx_status": ["mfx_1_led", "mfx_2_led", "mfx_3_led"],
+      "system_load": ["polyphony_count", "ram_usage", "cpu_usage"],
+      "bottom_panels": ["event_log", "activity_histogram"]
+    }
+  },
+  "compact": {
+    "views": {
+      "channels": [
+        "patch", "volume", "pan", "pitch", "cutoff", "resonance", 
+        "attack", "decay", "release", "chorus_send", "reverb_send", 
+        "output_assign", "mfx", "vibrato_depth", "vibrato_rate", 
+        "vibrato_delay", "portamento_switch", "tune"
+      ]
+    }
+  },
+  "tiny": {
+    "views": {
+      "channels": [
+        "patch", "volume"
+      ]
+    }
+  }
+}

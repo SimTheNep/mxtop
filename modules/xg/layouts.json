@@ -1,0 +1,40 @@
+{
+  "full": {
+    "views": {
+      "channels": [
+        "patch", "volume", "pan", "pitch", "modulation", "cutoff", "resonance", 
+        "attack", "decay", "release", "chorus_send", "reverb_send", "variation_send", 
+        "sustain", "vibrato_depth", "vibrato_rate", 
+        "vibrato_delay", "portamento_switch", "portamento_time"
+      ],
+      "system_fx": [
+        "reverb", "chorus", "variation"
+      ],
+      "master_output": [
+        "master_volume", "sustain_global", "system_reset"
+      ]
+    },
+    "widgets": {
+      "stream_telemetry": ["midi_bandwidth", "polyphony_heatmap"],
+      "harmonic_engine": ["chord_detector", "pitch_wheel_monitor"],
+      "bottom_panels": ["event_log", "activity_histogram"]
+    }
+  },
+  "compact": {
+    "views": {
+      "channels": [
+        "patch", "volume", "pan", "pitch", "modulation", "cutoff", "resonance", 
+        "attack", "decay", "release", "chorus_send", "reverb_send", "variation_send", 
+        "sustain", "vibrato_depth", "vibrato_rate", 
+        "vibrato_delay", "portamento_switch", "portamento_time"
+      ]
+    }
+  },
+  "tiny": {
+    "views": {
+      "channels": [
+        "patch", "volume"
+      ]
+    }
+  }
+}
