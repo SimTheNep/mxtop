@@ -9,6 +9,14 @@
 
   "objects": [
 
+    {
+        "id": "patch",
+        "kind": "patch",
+        "sequence": ["cc0", "cc32", "pc"],
+        "fields": { "msb": 0, "lsb": 0, "program": 0 },
+        "bank_select": { "msb": "bank", "lsb": "variation" }
+    },
+
     { "id": "volume",            "kind": "cc", "cc": 7 },
     { "id": "pan",               "kind": "cc", "cc": 10, "display": { "offset": -64, "transform": "pan_lcr" } },
     { "id": "pitch",             "kind": "pitchbend", "display": { "offset": -64 } },

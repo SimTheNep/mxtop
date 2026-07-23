@@ -10,7 +10,7 @@
         "reverb", "chorus"
       ],
       "master_output": [
-        "master_volume", "sustain_global", "reset_all_controllers"
+        "master_volume", "system_reset"
       ]
     },
     "widgets": {

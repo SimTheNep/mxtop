@@ -1266,7 +1266,12 @@
             {"bank_msb": 4, "program": 127, "bank_lsb": 3, "name": "Eruption"},
             {"bank_msb": 5, "program": 127, "bank_lsb": 3, "name": "Big Shot"},
             {"bank_msb": 6, "program": 127, "bank_lsb": 4, "name": "Explosion 2"}
-        ],
+        ]
+    }
+    ],
+    "drum_kits":[{
+        "id": "gs_drums",
+        "name": "GS R",
         "drum_kits": [
             {"bank_msb": 0, "program": 0, "bank_lsb": 1, "name": "STANDARD 1"},
             {"bank_msb": 0, "program": 1, "bank_lsb": 2, "name": "STANDARD 2"},
@@ -1307,7 +1312,7 @@
             {"bank_msb": 0, "program": 62, "bank_lsb": 4, "name": "CYM&CLAPS 2"},
             {"bank_msb": 0, "program": 127, "bank_lsb": 4, "name": "CM-64/32L"}
         ]
-    }
+        }
     ],
     "reverb_types": {
         "type": "enum",
@@ -1319,6 +1324,12 @@
         "type": "enum",
         "values": [
         {"id": 0, "name": "CHORUS"}
+        ]
+    },
+    "delay_types": {
+        "type": "enum",
+        "values": [
+        {"id": 0, "name": "DELAY"}
         ]
     }
 }

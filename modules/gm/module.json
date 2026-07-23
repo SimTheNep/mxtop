@@ -27,7 +27,8 @@
     { "id": "chorus_send",           "kind": "cc", "cc": 93 },
     { "id": "delay_send",            "kind": "cc", "cc": 94 },
     { "id": "master_volume",         "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] F7" },
-    { "id": "sustain_global",        "kind": "cc", "cc": 64 },
     { "id": "reset_all_controllers", "kind": "cc", "cc": 121 }
+
+    
   ]
 }

@@ -2,7 +2,7 @@
     "patches": [
     {
         "id": "xg",
-        "name": "XGlite",
+        "name": "XG",
         "patches": [
             {"bank_msb": 0, "program": 0, "bank_lsb": 0, "name": "Grand Piano"},
             {"bank_msb": 0, "program": 0, "bank_lsb": 1, "name": "Grand Piano KSP"},
@@ -326,7 +326,12 @@
             {"bank_msb": 0, "program": 125, "bank_lsb": 0, "name": "Helicopter"},
             {"bank_msb": 0, "program": 64, "bank_lsb": 0, "name": "Applause"},
             {"bank_msb": 0, "program": 127, "bank_lsb": 0, "name": "Gunshot"}
-        ],
+        ]
+    }
+    ],
+    "drum_kits":[{
+        "id": "xg_drums",
+        "name": "XG R",
         "drum_kits": [
             {"bank_msb": 127, "program": 0, "bank_lsb": 0, "name": "Standard Kit"},
             {"bank_msb": 126, "program": 0, "bank_lsb": 0, "name": "SFX Kit 1"},
@@ -339,7 +344,12 @@
             {"bank_msb": 127, "program": 32, "bank_lsb": 0, "name": "Jazz Kit"},
             {"bank_msb": 127, "program": 40, "bank_lsb": 0, "name": "Brush Kit"},
             {"bank_msb": 127, "program": 48, "bank_lsb": 0, "name": "Classic Kit"}
-        ],
+        ]
+        }
+    ],
+    "sfx":[{
+        "id": "xg_sfx",
+        "name": "XG SFX",
         "sfx": [
             {"bank_msb": 64, "program": 0, "bank_lsb": 0, "name": "CuttingNoise"},
             {"bank_msb": 64, "program": 1, "bank_lsb": 0, "name": "CuttingNoiz2"},
@@ -395,6 +405,12 @@
         "type": "enum",
         "values": [
         {"id": 0, "name": "CHORUS"}
+        ]
+    },
+        "delay_types": {
+        "type": "enum",
+        "values": [
+        {"id": 0, "name": "DELAY"}
         ]
     }
 }

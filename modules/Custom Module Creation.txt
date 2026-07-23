@@ -1,0 +1,208 @@
+================================================================================
+                             CUSTOM MODULE TUTORIAL
+================================================================================
+
+OVERVIEW
+--------
+Every module must strictly follow this file structure to ensure the JSON parser
+can process and display your configuration correctly.
+
+Feel free to check the existing configurations for a basis, check your synth's
+manual for SysEx and MIDI mappings. (Or test it with a SysEx monitor)
+
+GS has support for SC-55, SC-88, SC-88Pro and SC-8850 sound-sets, dictated by
+value 0-4 as LSB, if 0 it will default to SC-8850.
+
+Notes: Module loading does not affect the reader's debug menu.
+       "address" HEX strings cannot have spaces between bytes (e.g. "01000005").
+       "packet" and "data" HEX strings DO use spaces - each space-separated
+       token is either one literal byte ("F0") or a [PLACEHOLDER].
+
+
+FILE STRUCTURE
+--------------
+A complete module consists of three JSON files:
+
+1. MODULE.JSON
+   Defines device metadata, parameter objects, and how data is formatted 
+   for MIDI and SysEx output.
+
+   ROOT PROPERTIES
+   ---------------
+   * id (String) [Required]
+     Unique identifier for internal loading.
+
+   * name (String) [Required]
+     Readable module name shown in the UI.
+
+   * manufacturer / model / device_id (Numbers)
+     SysEx metadata bytes for hardware brand, model, and device ID.
+
+   * checksum (String)
+     Set to "roland" if the device requires Roland-style checksum calculations.
+
+   * packet (String)
+     Full SysEx message header/packet structure, only present on devices that
+     build addressed packets (see "address" below). Space-separated hex bytes
+     and [PLACEHOLDER] tokens, e.g.:
+     "F0 41 [DEVICE] 00 48 [COMMAND] [ADDRESS] [DATA] [CHECKSUM] F7"
+
+   * objects (Array) [Required]
+     List of parameter and message objects.
+
+
+   OBJECT FIELDS ("objects" Array)
+   -------------------------------
+   * id (String) [Required]
+     Unique parameter name.
+
+   * kind (String) [Required]
+     Message type: "cc", "sysex", "patch", or "pitchbend".
+
+   * cc (Number)
+     MIDI CC number (0-127). Required if kind is "cc".
+
+   * address (String)
+     SysEx HEX address, no spaces (e.g. "01000005"). Used on devices that share
+     one "packet" template (see above) - the address slots into [ADDRESS].
+     One of address/data is required if kind is "sysex".
+
+   * data (String)
+     A full, standalone SysEx packet for this one object, including a [VAL]
+     placeholder for the live value (e.g. "F0 7F 7F 04 01 00 [VAL] F7"). Used
+     instead of "address" on devices that don't share one packet template.
+     One of address/data is required if kind is "sysex".
+
+   * sequence (Array of Strings)
+     Order of messages that make up a patch change, e.g. ["cc0", "cc32", "pc"].
+     Only used when kind is "patch".
+
+   * fields (Object)
+     Starting/default values for a patch change, e.g.
+     { "msb": 0, "lsb": 0, "program": 0 }. Only used when kind is "patch".
+
+   * bank_select (Object)
+     What MSB/LSB actually mean on THIS device for patch selection, e.g.
+     { "msb": "bank", "lsb": "variation" } - purely descriptive labels, not
+     values. Only used when kind is "patch".
+
+   * display (Object)
+     Visual formatting setup:
+     - offset (Integer)   : Calculated minimum for bipolar values (e.g., -64).
+     - transform (String) : "pan_lcr" for panning, "frequency" for Hz tuning.
+
+   * encoding (String)
+     Set to "nibbles" for nibble-encoded data.
+
+   * bytes (Number)
+     Data size in bytes/nibbles (defaults to standard 0-127 byte).
+
+   * lookup (String)
+     Matches an enum key in dictionary.json.
+
+--------------------------------------------------------------------------------
+
+2. LAYOUTS.JSON
+   Defines the parameters and widgets that will be displayed at runtime.
+   These never touch the state layer - they go straight to the UI.
+
+   ROOT STRUCTURE (Display Variants)
+   ---------------------------------
+   * [variant_name] (Object) [Required]
+     Root keys define layout variants for different UI sizes or modes 
+     ("full", "compact", "tiny"). Must contain at least one view or widget group.
+
+
+   VARIANT PROPERTIES
+   ------------------
+   * views (Object)
+     Defines groups of controls for the main workspace views.
+     - Key          : Unique view section name (e.g., "channels", "system_fx").
+     - Value (Array): Ordered list of parameter IDs matching object IDs in module.json.
+
+   * widgets (Object)
+     Defines groups for secondary panels, status displays, or utility widgets.
+     - Key          : Unique widget section name (e.g., "mfx_status", "system_load").
+     - Value (Array): Ordered list of indicator or control IDs matching module.json.
+     Not every variant needs one - "full" is typically the only variant with
+     room for widgets, "compact"/"tiny" usually skip this section entirely.
+
+--------------------------------------------------------------------------------
+
+3. DICTIONARY.JSON
+   Contains value lookups for effects and sound/patch bank collections.
+
+   VALUE LOOKUPS (Enums)
+   ---------------------
+   Top-level keys matched by the "lookup" property in module.json objects.
+   Marked by "type": "enum", and come in either of two shapes:
+
+   * Flat map shape - "values" holds ONE object mapping raw value -> label:
+       "output_assign": {
+         "type": "enum",
+         "values": [ { "0": "MFX", "1": "A (Bypass)", "13": "Patch" } ]
+       }
+
+   * Per-entry shape - "values" holds a list of individual entries:
+       "reverb_types": {
+         "type": "enum",
+         "values": [
+           { "id": 0, "name": "OFF" },
+           { "id": 1, "name": "Reverb", "short": "Rev" }
+         ]
+       }
+     "id" can be a JSON number or a numeric string - both work. The short
+     label can be spelled either "short" or "short_name".
+
+
+   SOUND BANK GROUPS (Patches / Kits)
+   ----------------------------------
+   Any top-level key in dictionary.json whose value is a JSON array is 
+   treated as a bank group. Adding a new array-shaped key like "sfx_kits"
+   needs no parser changes.
+
+     - Bank Object Properties:
+       * id (String) [Required]   : Unique bank identifier.
+       * name (String) [Required] : Human-readable bank label shown in the UI.
+       * selector (Object)        : MIDI Bank Select definition:
+                                    - bank_msb (Number) : CC0 value.
+                                    - bank_lsb (Number) : CC32 value.
+       * <any array field>        : The list of individual sounds in the bank. 
+                                    Each entry:
+                                      - program (Number) [Required]:
+                                        MIDI Program Change.
+                                      - bank_msb / bank_lsb (Number):
+                                        Patch-level Bank Select override, only
+                                        needed if this one patch isn't reachable
+                                        through the bank's own "selector".
+                                      - name (String) [Required]:
+                                        Sound/patch display name.
+
+================================================================================
+
+
+DATA FLOW MAP
+-------------
+
+  LAYOUTS.JSON                     MODULE.JSON                 DICTIONARY.JSON
+(UI Structure & Views)       (Hardware & Message Map)      (Lookups & Sound Banks)
++--------------------+       +--------------------+       +--------------------+
+| layoutDef          |       | moduleDef          |       | dictionaryDef      |
+|                    |       |                    |       |                    |
+|  * variants        |       |  * Metadata        |       |  * enums           |
+|    - "full", etc.  |       |    - id, name      |       |    - "reverb_types" |
+|    - views         |       |    - device_id     |       |      - values      |
+|      * section     |       |                    |       |        * id, name  |
+|        - item ID --+-----> |  * objects         |       |                    |
+|    - widgets       |       |    * ModuleObject  |       |  * bankGroups      |
+|      * section     |       |      - id, kind    |       |    - "patches"     |
+|        - item ID --+-----> |      - address/cc  |       |    - "drum_kits"   |
+|                    |       |      - sequence/    |       |    - (any array)   |
+|                    |       |        fields/      |       |      * patchBank  |
+|                    |       |        bank_select  |       |        - selector  |
+|                    |       |      - display      |       |        - items     |
+|                    |       |      - lookup ------+-----> |          * program |
+|                    |       |                    |       |          * name    |
++--------------------+       +--------------------+       +--------------------+
+
+================================================================================

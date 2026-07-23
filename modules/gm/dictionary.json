@@ -2,7 +2,7 @@
   "patches": [
     {
       "id": "gm2",
-      "name": "General MIDI 2",
+      "name": "GM",
       "patches": [
         { "program": 0, "name": "Acoustic Grand Piano" },
         { "program": 1, "name": "Bright Acoustic Piano" },
@@ -138,8 +138,8 @@
   "drum_kits": [
     {
       "id": "gm_drums",
-      "name": "GM2 Drum Kits",
-      "patches": [
+      "name": "GM R",
+      "drum_kits": [
         { "program": 0, "name": "Standard" },
         { "program": 8, "name": "Room" },
         { "program": 16, "name": "Power" },

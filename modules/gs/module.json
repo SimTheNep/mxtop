@@ -4,11 +4,11 @@
   "objects": [
 
     {
-      "id": "patch",
-      "kind": "patch",
-      "sequence": ["cc0", "cc32", "pc"],
-      "fields": { "msb": 0, "lsb": 0, "program": 0 },
-      "bank_select": { "msb": "variation", "lsb": "map" }
+        "id": "patch",
+        "kind": "patch",
+        "sequence": ["cc0", "cc32", "pc"],
+        "fields": { "msb": 0, "lsb": 0, "program": 0 },
+        "bank_select": { "msb": "variation", "lsb": "bank" }
     },
 
     { "id": "volume",             "kind": "cc", "cc": 7 },
@@ -31,7 +31,6 @@
     { "id": "chorus_send",        "kind": "cc", "cc": 93 },
     { "id": "delay_send",         "kind": "cc", "cc": 94 },
     { "id": "master_volume",      "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] F7" },
-    { "id": "sustain_global",     "kind": "cc", "cc": 64 },
     { "id": "system_reset",       "kind": "sysex", "data": "F0 41 10 42 12 40 00 7F 00 41 F7" }
   ]
 }

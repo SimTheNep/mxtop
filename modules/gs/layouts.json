@@ -11,7 +11,7 @@
         "reverb", "chorus", "delay"
       ],
       "master_output": [
-        "master_volume", "sustain_global", "system_reset"
+        "master_volume", "system_reset"
       ]
     },
     "widgets": {
