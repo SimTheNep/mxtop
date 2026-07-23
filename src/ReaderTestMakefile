@@ -1,0 +1,22 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Imidi_reader/craigsapp
+
+CRAIGAPP_SRCS = $(wildcard midi_reader/craigsapp/*.cpp)
+RTMIDI_FLAGS = $(shell pkg-config --cflags --libs rtmidi)
+
+SRCS = main.cpp \
+       tui/debug/debug_ui.cpp \
+       midi_reader/midi_load.cpp \
+       $(CRAIGAPP_SRCS)
+
+TARGET = midi_reader/miditest
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) $(RTMIDI_FLAGS) -lncurses -o $(TARGET)
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all clean
