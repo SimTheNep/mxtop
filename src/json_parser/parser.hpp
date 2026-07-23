@@ -1,17 +1,40 @@
 #pragma once
+
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <nlohmann/json.hpp>
 
-struct LayoutVar {
-    std::map<std::string, std::vector<std::string>> views; // Actual MIDI data to display
-    std::map<std::string, std::vector<std::string>> widgets; // System info, logs, etc...
+// From types.hpp
+enum class kind
+{
+    Patch,
+    CC,
+    PitchBend,
+    SysEx
 };
 
-struct LayoutsDef {
-    std::map<std::string, LayoutVar> variants; // "Full", "Compact", "Tiny"
+// LAYOUTS
+// These do not pass through the state layer, they go straight to the UI
+//
+// 
+
+
+struct layoutSect
+{
+    std::vector<std::string> items;
 };
 
-LayoutsDef parseLayouts(const nlohmann::json& j);
-void debugPrintLayouts(const LayoutsDef& layouts);
+struct layoutVary
+{
+    std::unordered_map<std::string, layoutSect> views;
+    std::unordered_map<std::string, layoutSect> widgets;
+};
+
+struct layoutDef
+{
+    std::unordered_map<std::string, layoutVary> variants;
+};
+
+layoutDef parseLayouts(const nlohmann::json& j);
+void debugLayouts(const layoutDef& layouts);

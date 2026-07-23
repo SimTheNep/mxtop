@@ -2,50 +2,65 @@
 #include <cstdio>
 #include <fstream>
 
-static std::map<std::string, std::vector<std::string>>
+using json = nlohmann::json;
 
-// Should give something along the lines of "patches": { "bank 1": ["msb","lsb"] }
-parseGroups(const nlohmann::json& j) {
-    std::map<std::string, std::vector<std::string>> out;
+static std::unordered_map<std::string, layoutSect>
 
-    for (auto& [key, val] : j.items())
-        out[key] = val.get<std::vector<std::string>>();
+parseGroups(const json& j)
+{
+    std::unordered_map<std::string, layoutSect> out;
+
+    for (const auto& [key, value] : j.items())
+    {
+        out[key] = layoutSect{
+            value.get<std::vector<std::string>>()
+        };
+    }
+
     return out;
 }
 
 // LAYOUTS.JSON
+// 
 //
-//
 
-LayoutsDef parseLayouts(const nlohmann::json& j) {
-    LayoutsDef def;
+layoutDef parseLayouts(const json& j)
+{
+    layoutDef def;
 
-    for (auto& [variantName, variantJson] : j.items()) {
-        LayoutVar v;
+    for (const auto& [variantName, variantJson] : j.items())
+    {
+        layoutVary variant;
 
-        if (variantJson.contains("views"))
-            v.views = parseGroups(variantJson.at("views"));
+        if (variantJson.contains("views")){variant.views = parseGroups(variantJson.at("views"));}
+        if (variantJson.contains("widgets")){variant.widgets = parseGroups(variantJson.at("widgets"));} // Only Full has widgets
 
-        // Only full has widgets
-        if (variantJson.contains("widgets"))
-            v.widgets = parseGroups(variantJson.at("widgets"));
-
-        def.variants[variantName] = std::move(v);
+        def.variants[variantName] = std::move(variant);
     }
 
     return def;
 }
 
+// DEBUG
+//
+//
 
-// Debug printer
-void debugPrintLayouts(const LayoutsDef& layouts) {
-    for (auto& [name, variant] : layouts.variants) {
-        printf("variant: %s\n", name.c_str());
+void debugLayouts(const layoutDef& layouts)
+{
+    for (const auto& [variantName, variant] : layouts.variants)
+    {
+    printf("Display: %s\n", variantName.c_str());
 
-        for (auto& [section, ids] : variant.views)
-            printf("  views.%s (%zu items)\n", section.c_str(), ids.size());
+        for (const auto& [sectionName, section] : variant.views)
+        {
+            printf("    Parameter: %s\n", sectionName.c_str());
+            for (const auto& id : section.items) { printf("        %s\n", id.c_str()); }
+        }
 
-        for (auto& [section, ids] : variant.widgets)
-            printf("  widgets.%s (%zu items)\n", section.c_str(), ids.size());
+        for (const auto& [sectionName, section] : variant.widgets)
+        {
+            printf("    Widget: %s\n", sectionName.c_str());
+            for (const auto& id : section.items) { printf("        %s\n", id.c_str()); }
+        }
     }
 }

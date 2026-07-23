@@ -1,17 +1,17 @@
-// Delete once main.cpp has this implemented
+// Delete once main.cpp exists
 #include "parser.hpp"
 #include <fstream>
-#include <cstdio>
+#include <iostream>
 
 int main(int argc, char* argv[]) {
     std::string path = argv[1];
     std::ifstream f(path);
     if (!f) {
-        printf("Couldn't open %s (check the path/working directory)\n", path.c_str());
+        std::cerr << "Couldn't open " << path << " (check the path/working directory)\n";
         return 1;
     }
 
     nlohmann::json j;
     f >> j;
-    debugPrintLayouts(parseLayouts(j));
+    debugLayouts(parseLayouts(j));
 }
