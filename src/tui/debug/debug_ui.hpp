@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include <ncurses.h>
+#include <ncurses.h> // ncurses used here for simplicity, it won't be in the final UI
+// Thanks to user analogq for telling me about ncurses and FTXUI
 
-// ncurses view of what's currently being read
-// Three windows: Info (port, file, timestamp), Labels (table header), Table (data)
+// Info (port, file, timestamp), Labels (table header), Table (data)
 struct MidiUi {
 public:
 
