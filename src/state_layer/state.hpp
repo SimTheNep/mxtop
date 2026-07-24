@@ -12,13 +12,14 @@
 #include <vector>
 
 struct channelState {
-    std::unordered_map<std::string, int> rawValues; // object id outputs last raw value
+    std::unordered_map<std::string, int> rawValues; // Object id outputs last raw value
 };
 
 class stateLayer {
 public:
-    stateLayer(const moduleDef& module);
+    explicit stateLayer(const moduleDef& module);
     void eventHandler(const RawEvent& ev);
+    void handleSysEx(const RawEvent& ev, channelState& ch); // Fixed syntax & added missing ';'
 
     const channelState* getChannel(int channel) const;
 
@@ -27,8 +28,9 @@ private:
 
     const moduleDef& module_;
 
-    std::array<std::vector<const ModuleObject*>, 128> ccIndex_; // CC values
-    std::vector<const ModuleObject*> pitchBendIndex_; // Pitch bend Values
+    std::array<std::vector<const ModuleObject*>, 128> ccIndex_{}; // Zero-initialized array
+    std::vector<const ModuleObject*> pitchBendIndex_;
+    std::vector<std::pair<std::vector<uint8_t>, const ModuleObject*>> sysexIndex_;
 
-    std::unordered_map<int, channelState> channels_; // Channel count
+    std::unordered_map<int, channelState> channels_;
 };
