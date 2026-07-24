@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
+#include <optional>
+#include <cstdio>
 
 static std::vector<uint8_t> hexToBytes(const std::string& hex) {
     std::vector<uint8_t> out;
@@ -15,6 +17,20 @@ static std::vector<uint8_t> hexToBytes(const std::string& hex) {
         out.push_back(static_cast<uint8_t>(std::stoul(hex.substr(i, 2), nullptr, 16)));
 
     return out;
+}
+
+// Builds a patch sequence from fields, anything not present defaults to 0
+static channelState::patchState makeDefaultPatchState(const ModuleObject& obj) {
+    channelState::patchState p;
+
+    if (auto it = obj.fields.find("msb"); it != obj.fields.end())
+        p.msb = it->second;
+    if (auto it = obj.fields.find("lsb"); it != obj.fields.end())
+        p.lsb = it->second;
+    if (auto it = obj.fields.find("program"); it != obj.fields.end())
+        p.program = it->second;
+
+    return p;
 }
 
 // Constructor for the module (had to be in between both decoders cus order)
@@ -28,6 +44,13 @@ stateLayer::stateLayer(const moduleDef& module) : module_(module) {
             pitchBendIndex_.push_back(&obj);
         } else if (obj.type == kind::SysEx && obj.address) {
             sysexIndex_.emplace_back(hexToBytes(*obj.address), &obj);
+        } else if (obj.type == kind::Patch) {
+            patchBinding pb;
+            pb.obj = &obj;
+            pb.hasMsb     = std::find(obj.sequence.begin(), obj.sequence.end(), "cc0")  != obj.sequence.end();
+            pb.hasLsb     = std::find(obj.sequence.begin(), obj.sequence.end(), "cc32") != obj.sequence.end();
+            pb.hasProgram = std::find(obj.sequence.begin(), obj.sequence.end(), "pc")   != obj.sequence.end();
+            patchIndex_.push_back(pb);
         }
     }
 }
@@ -50,12 +73,9 @@ void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
 
             // Check address match
             if (std::equal(addrBytes.begin(), addrBytes.end(), ev.data.begin() + headerLen)) {
-                int value = 0; 
-                
+                int value = 0;
+
                 // NIBBLE DECODER
-                // In case of my SD-90s master tuning, it handles it as 4 nibbles of data.
-                // Shifts the current data 4 bites left and set the 4 low bytes as the nibble, repeats once per byte
-                //
                 if (obj->encoding && *obj->encoding == "nibbles") {
                     for (int i = 0; i < valueBytes; ++i)
                         value = (value << 4) | (ev.data[valueStart + i] & 0x0F);
@@ -72,7 +92,7 @@ void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
     }
 }
 
-// CC & PB STORAGE & HANDLER
+// CC, PB & PATCH STORAGE & HANDLER
 //
 //
 
@@ -81,19 +101,47 @@ void stateLayer::storeValue(channelState& ch, const std::vector<const ModuleObje
         ch.rawValues[obj->id] = value;
 }
 
+// Update every patch that has CC0 and CC32... Expandable if a module by any chance has more than 1 way to define a patch.
+void stateLayer::handlePatchCC(channelState& ch, int ccNum, int value) {
+    for (const auto& pb : patchIndex_) {
+        if (ccNum == 0  && !pb.hasMsb) continue;
+        if (ccNum == 32 && !pb.hasLsb) continue;
+
+        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, makeDefaultPatchState(*pb.obj));
+        if (ccNum == 0) it->second.msb = value;
+        else            it->second.lsb = value;
+    }
+}
+
+// Completes the sequence with the PC when it arrives (this is separate because MSB and LSB do not affect it)
+void stateLayer::handlePC(channelState& ch, int program) {
+    for (const auto& pb : patchIndex_) {
+        if (!pb.hasProgram) continue;
+
+        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, makeDefaultPatchState(*pb.obj));
+        it->second.program = program;
+    }
+}
+
 void stateLayer::eventHandler(const RawEvent& ev) {
     channelState& ch = channels_[ev.channel];
 
     switch (ev.kind) {
         case MsgKind::CC:
             if (ev.data.size() >= 3 && ev.data[1] < 128) {
-                const auto& targets = ccIndex_[ev.data[1]];
+                int ccNum = ev.data[1];
+                int value = ev.data[2];
+
+                const auto& targets = ccIndex_[ccNum];
                 if (!targets.empty()) {
-                    storeValue(ch, targets, ev.data[2]);
+                    storeValue(ch, targets, value);
                 }
+
+                if (ccNum == 0 || ccNum == 32)
+                    handlePatchCC(ch, ccNum, value);
             }
             break;
-        
+
         case MsgKind::PitchBend:
             if (ev.data.size() >= 3) {
                 storeValue(ch, pitchBendIndex_, (ev.data[2] << 7) | ev.data[1]);
@@ -102,6 +150,12 @@ void stateLayer::eventHandler(const RawEvent& ev) {
 
         case MsgKind::SysEx:
             handleSysEx(ev, ch);
+            break;
+
+        case MsgKind::ProgramChange:
+            if (ev.data.size() >= 2) {
+                handlePC(ch, ev.data[1]);
+            }
             break;
 
         default:
@@ -148,9 +202,14 @@ int main(){ // Scratch
     sysexObjRaw.bytes = 4;
     sysexObjRaw.encoding = std::nullopt;
 
+    ModuleObject patchObj;
+    patchObj.id = "patch";
+    patchObj.type = kind::Patch;
+    patchObj.sequence = { "cc0", "cc32", "pc" };
+    patchObj.fields = { {"msb", 0}, {"lsb", 0}, {"program", 0} };
 
     moduleDef module;
-    module.objects = { volumeObj, sustainObj, pitchObj, sysexObj, sysexObjRaw };
+    module.objects = { volumeObj, sustainObj, pitchObj, sysexObj, sysexObjRaw, patchObj };
 
     stateLayer state(module); // Built after objects are populared
 
@@ -187,7 +246,7 @@ int main(){ // Scratch
         0xF0, 0x41, 0x10, 0x00, 0x48, 0x12,   // header
         0x01, 0x00, 0x00, 0x00,               // address
         0x00, 0x04, 0x00, 0x00,               // value
-        0x00,                                  // checksum (unchecked right now, any byte works)
+        0x00,                                  // checksum
         0xF7
     };
     state.eventHandler(ev4);
@@ -196,15 +255,45 @@ int main(){ // Scratch
     ev5.kind = MsgKind::SysEx;
     ev5.channel = -1;
     ev5.data = {
-        0xF0, 0x41, 0x10, 0x00, 0x48, 0x12,   // header
-        0x01, 0x00, 0x00, 0x00,               // address
-        0x00, 0x04, 0x00, 0x00,               // value
-        0x00,                                  // checksum (unchecked right now, any byte works)
+        0xF0, 0x41, 0x10, 0x00, 0x48, 0x12,
+        0x01, 0x00, 0x00, 0x00,
+        0x00, 0x04, 0x00, 0x00,
+        0x00,
         0xF7
     };
     state.eventHandler(ev5);
 
-    
+    // ch 0: bank select MSB
+    RawEvent ev6;
+    ev6.kind = MsgKind::CC;
+    ev6.channel = 0;
+    ev6.data = { 0xB0, 0, 80 }; // Should change to 80
+    state.eventHandler(ev6);
+
+    // ch 0: bank select LSB
+    RawEvent ev7;
+    ev7.kind = MsgKind::CC;
+    ev7.channel = 0;
+    ev7.data = { 0xB0, 32, 1 }; // Should change to 1
+    state.eventHandler(ev7);
+
+    // ch 0: program change
+    RawEvent ev8;
+    ev8.kind = MsgKind::ProgramChange;
+    ev8.channel = 0;
+    ev8.data = { 0xC0, 5 }; // Should change to 5
+    state.eventHandler(ev8);
+
+    // Checks (for patch logic)
+    const channelState* ch0 = state.getChannel(0);
+    if (ch0) {
+        auto it = ch0->patches.find("patch");
+        if (it != ch0->patches.end()) {
+            printf("ch=0 patch msb=%d lsb=%d program=%d\n",
+                it->second.msb, it->second.lsb, it->second.program);
+        }
+        printf("ch=0 volume=%d\n", ch0->rawValues.at("volume"));
+    }
 
     // Checks
     auto print = [&](int channel) {
