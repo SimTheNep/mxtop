@@ -9,7 +9,15 @@
 #include <algorithm>
 #include <optional>
 #include <cstdio>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <filesystem>
+#include <iostream>
+#include <cmath>
 
+// CONVERT HEX TO BYTES
+//
+//
 static std::vector<uint8_t> hexToBytes(const std::string& hex) {
     std::vector<uint8_t> out;
 
@@ -19,8 +27,10 @@ static std::vector<uint8_t> hexToBytes(const std::string& hex) {
     return out;
 }
 
+// DEFAULT PATCH STATE
+//
 // Builds a patch sequence from fields, anything not present defaults to 0
-static channelState::patchState makeDefaultPatchState(const ModuleObject& obj) {
+static channelState::patchState defaultPatch(const ModuleObject& obj) {
     channelState::patchState p;
 
     if (auto it = obj.fields.find("msb"); it != obj.fields.end())
@@ -34,10 +44,12 @@ static channelState::patchState makeDefaultPatchState(const ModuleObject& obj) {
 }
 
 // Constructor for the module (had to be in between both decoders cus order)
-stateLayer::stateLayer(const moduleDef& module) : module_(module) {
+stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary) : module_(module), dictionary_(dictionary) {
 
     // Yay... if chains...
     for (const auto& obj : module_.objects) {
+        objectById_[obj.id] = &obj;
+
         if (obj.type == kind::CC && obj.cc) {
             ccIndex_[*obj.cc].push_back(&obj);
         } else if (obj.type == kind::PitchBend) {
@@ -53,6 +65,15 @@ stateLayer::stateLayer(const moduleDef& module) : module_(module) {
             patchIndex_.push_back(pb);
         }
     }
+
+    // For patch and effect names
+    for (const auto& [name, dict] : dictionary_.enums)
+    {
+        auto& lookup = enumLookup_[name];
+
+        for (const auto& item : dict.values)
+            lookup[item.id] = item.name;
+    }
 }
 
 
@@ -60,34 +81,80 @@ stateLayer::stateLayer(const moduleDef& module) : module_(module) {
 //
 //
 
+static bool verifyRolandChecksum(const std::vector<uint8_t>& data, size_t addressStart, size_t checksumIndex)
+    {
+        // CHecks roland checksum and calculates it
+        int sum = 0;
+
+        for (size_t i = addressStart; i < checksumIndex; ++i)
+            sum += data[i];
+
+        int expected = (128 - (sum & 0x7F)) & 0x7F;
+
+        return (data[checksumIndex] & 0x7F) == expected;
+    }
+
 void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
+
+    // Validade SysEx structure from module.json
+    if (ev.data.size() < headerLen_ + 2)
+        return;
+
+    if (ev.data.front() != 0xF0)
+        return;
+
+    if (ev.data.back() != 0xF7)
+        return;
+
+    if (ev.data[1] != module_.manufacturer)
+        return;
+
+    if (ev.data[2] != module_.deviceId)
+        return;
+
+    if (ev.data[4] != module_.model)
+        return;
+
+    if (ev.data[5] != 0x12)
+    return;
+
+    // Roland checksum check
+    if (module_.checksum == "roland")
+    {
+        const size_t checksumIndex = ev.data.size() - 2;
+
+        if (!verifyRolandChecksum(
+                ev.data,
+                headerLen_,
+                checksumIndex))
+            return;
+    }
+
     for (const auto& [addrBytes, obj] : sysexIndex_) {
-        int valueBytes = obj->bytes.value_or(1);
+        const int valueBytes = obj->bytes.value_or(1);
 
-        // Try both 5-byte and 6-byte header offsets (GS vs SD-90/Modern Roland)
-        for (size_t headerLen : {5, 6}) {
-            size_t valueStart = headerLen + addrBytes.size();
+        const size_t addressStart = headerLen_;
+        const size_t valueStart   = addressStart + addrBytes.size();
 
-            // Check packet bounds
-            if (ev.data.size() < valueStart + valueBytes + 1) continue;
+        // Check packet bounds
+        if (ev.data.size() < valueStart + valueBytes + 1) continue;
 
-            // Check address match
-            if (std::equal(addrBytes.begin(), addrBytes.end(), ev.data.begin() + headerLen)) {
-                int value = 0;
+        // Check address match
+        if (std::equal(addrBytes.begin(), addrBytes.end(), ev.data.begin() + headerLen_)) {
+            int value = 0;
 
-                // NIBBLE DECODER
-                if (obj->encoding && *obj->encoding == "nibbles") {
-                    for (int i = 0; i < valueBytes; ++i)
-                        value = (value << 4) | (ev.data[valueStart + i] & 0x0F);
-                } else {
-                    for (int i = 0; i < valueBytes; ++i) {
-                        value = (value << 8) | ev.data[valueStart + i];
-                    }
+            // NIBBLE DECODER
+            if (obj->encoding && *obj->encoding == "nibbles") {
+                for (int i = 0; i < valueBytes; ++i)
+                    value = (value << 4) | (ev.data[valueStart + i] & 0x0F);
+            } else {
+                for (int i = 0; i < valueBytes; ++i) {
+                    value = (value << 8) | ev.data[valueStart + i];
                 }
-
-                ch.rawValues[obj->id] = value;
-                break; // Found match for this object!
             }
+
+            ch.rawValues[obj->id] = value;
+            break; // Found match for this object!
         }
     }
 }
@@ -102,23 +169,23 @@ void stateLayer::storeValue(channelState& ch, const std::vector<const ModuleObje
 }
 
 // Update every patch that has CC0 and CC32... Expandable if a module by any chance has more than 1 way to define a patch.
-void stateLayer::handlePatchCC(channelState& ch, int ccNum, int value) {
+void stateLayer::updtBank(channelState& ch, int ccNum, int value) {
     for (const auto& pb : patchIndex_) {
         if (ccNum == 0  && !pb.hasMsb) continue;
         if (ccNum == 32 && !pb.hasLsb) continue;
 
-        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, makeDefaultPatchState(*pb.obj));
+        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, defaultPatch(*pb.obj));
         if (ccNum == 0) it->second.msb = value;
         else            it->second.lsb = value;
     }
 }
 
 // Completes the sequence with the PC when it arrives (this is separate because MSB and LSB do not affect it)
-void stateLayer::handlePC(channelState& ch, int program) {
+void stateLayer::updtPC(channelState& ch, int program) {
     for (const auto& pb : patchIndex_) {
         if (!pb.hasProgram) continue;
 
-        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, makeDefaultPatchState(*pb.obj));
+        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, defaultPatch(*pb.obj));
         it->second.program = program;
     }
 }
@@ -138,7 +205,7 @@ void stateLayer::eventHandler(const RawEvent& ev) {
                 }
 
                 if (ccNum == 0 || ccNum == 32)
-                    handlePatchCC(ch, ccNum, value);
+                    updtBank(ch, ccNum, value);
             }
             break;
 
@@ -154,7 +221,19 @@ void stateLayer::eventHandler(const RawEvent& ev) {
 
         case MsgKind::ProgramChange:
             if (ev.data.size() >= 2) {
-                handlePC(ch, ev.data[1]);
+                updtPC(ch, ev.data[1]);
+            }
+            break;
+
+        case MsgKind::NoteOn:
+            if (ev.data.size() >= 3) {
+                updtNote(ch, ev.data[1], ev.velocity, /*on=*/true);
+            }
+            break;
+
+        case MsgKind::NoteOff:
+            if (ev.data.size() >= 2) {
+                updtNote(ch, ev.data[1], 0, /*on=*/false);
             }
             break;
 
@@ -168,150 +247,273 @@ const channelState* stateLayer::getChannel(int channel) const {
     return it == channels_.end() ? nullptr : &it->second;
 }
 
-int main(){ // Scratch
+// This is for reverb, delay, etc... the lookup on the module.json
+std::optional<std::string> stateLayer::effLookup(const ModuleObject& obj, int value) const 
+{
+    if (!obj.lookup)
+    return std::nullopt;
 
-    // PARAMETERS
-    //
-    //
+    auto dict = enumLookup_.find(*obj.lookup);
 
-    ModuleObject volumeObj;
-    volumeObj.id = "volume";
-    volumeObj.type = kind::CC;
-    volumeObj.cc = 7;
+    if (dict == enumLookup_.end())
+        return std::nullopt;
 
-    ModuleObject sustainObj;
-    sustainObj.id = "sustain";
-    sustainObj.type = kind::CC;
-    sustainObj.cc = 64;
+    auto it = dict->second.find(value);
 
-    ModuleObject pitchObj;
-    pitchObj.id = "pitchbend";
-    pitchObj.type = kind::PitchBend;
+    if (it == dict->second.end())
+        return std::nullopt;
 
-    ModuleObject sysexObj;
-    sysexObj.id = "sysex";
-    sysexObj.type = kind::SysEx;
-    sysexObj.address = "01000000";
-    sysexObj.bytes = 4;
-    sysexObj.encoding = "nibbles";
+    return it->second;
 
-    ModuleObject sysexObjRaw;
-    sysexObjRaw.id = "sysex_raw";
-    sysexObjRaw.type = kind::SysEx;
-    sysexObjRaw.address = "01000000";
-    sysexObjRaw.bytes = 4;
-    sysexObjRaw.encoding = std::nullopt;
+    return std::nullopt;
+}
 
-    ModuleObject patchObj;
-    patchObj.id = "patch";
-    patchObj.type = kind::Patch;
-    patchObj.sequence = { "cc0", "cc32", "pc" };
-    patchObj.fields = { {"msb", 0}, {"lsb", 0}, {"program", 0} };
+// Assigns patch names to the patch numbers
+std::optional<std::string>
+stateLayer::patchLookup(const channelState::patchState& patch) const
+{
+    auto groupIt = dictionary_.bankGroups.find("patches");
 
-    moduleDef module;
-    module.objects = { volumeObj, sustainObj, pitchObj, sysexObj, sysexObjRaw, patchObj };
+    if (groupIt == dictionary_.bankGroups.end())
+        return std::nullopt;
 
-    stateLayer state(module); // Built after objects are populared
+    if (groupIt == dictionary_.bankGroups.end())
+        return std::nullopt;
 
-    // OUTPUTS
-    //
-    //
+    for (const auto& bank : groupIt->second)
+    {
+        // Check MSB/LSB
+        if (bank.bank.bankMSB &&
+            *bank.bank.bankMSB != patch.msb)
+            continue;
 
-    // ch 0: volume
-    RawEvent ev1;
-    ev1.kind = MsgKind::CC;
-    ev1.channel = 0;
-    ev1.data = { 0xB0, 7, 100 };
-    state.eventHandler(ev1);
+        if (bank.bank.bankLSB &&
+            *bank.bank.bankLSB != patch.lsb)
+            continue;
 
-    // ch 0: sustain
-    RawEvent ev2;
-    ev2.kind = MsgKind::CC;
-    ev2.channel = 0;
-    ev2.data = { 0xB0, 64, 127 };
-    state.eventHandler(ev2);
+        // Find rpogram
+        for (const auto& item : bank.items)
+        {
+            if (item.program != patch.program)
+                continue;
 
-    // ch 1: pitchbend
-    RawEvent ev3;
-    ev3.kind = MsgKind::PitchBend;
-    ev3.channel = 1;
-    ev3.data = { 0xE1, 0x00, 0x50 };
-    state.eventHandler(ev3);
+            // Per-patch overrides
+            if (item.bankMSB &&
+                *item.bankMSB != patch.msb)
+                continue;
 
-    // ch -1: sysex
-    RawEvent ev4;
-    ev4.kind = MsgKind::SysEx;
-    ev4.channel = -1;
-    ev4.data = {
-        0xF0, 0x41, 0x10, 0x00, 0x48, 0x12,   // header
-        0x01, 0x00, 0x00, 0x00,               // address
-        0x00, 0x04, 0x00, 0x00,               // value
-        0x00,                                  // checksum
-        0xF7
-    };
-    state.eventHandler(ev4);
+            if (item.bankLSB &&
+                *item.bankLSB != patch.lsb)
+                continue;
 
-    RawEvent ev5;
-    ev5.kind = MsgKind::SysEx;
-    ev5.channel = -1;
-    ev5.data = {
-        0xF0, 0x41, 0x10, 0x00, 0x48, 0x12,
-        0x01, 0x00, 0x00, 0x00,
-        0x00, 0x04, 0x00, 0x00,
-        0x00,
-        0xF7
-    };
-    state.eventHandler(ev5);
-
-    // ch 0: bank select MSB
-    RawEvent ev6;
-    ev6.kind = MsgKind::CC;
-    ev6.channel = 0;
-    ev6.data = { 0xB0, 0, 80 }; // Should change to 80
-    state.eventHandler(ev6);
-
-    // ch 0: bank select LSB
-    RawEvent ev7;
-    ev7.kind = MsgKind::CC;
-    ev7.channel = 0;
-    ev7.data = { 0xB0, 32, 1 }; // Should change to 1
-    state.eventHandler(ev7);
-
-    // ch 0: program change
-    RawEvent ev8;
-    ev8.kind = MsgKind::ProgramChange;
-    ev8.channel = 0;
-    ev8.data = { 0xC0, 5 }; // Should change to 5
-    state.eventHandler(ev8);
-
-    // Checks (for patch logic)
-    const channelState* ch0 = state.getChannel(0);
-    if (ch0) {
-        auto it = ch0->patches.find("patch");
-        if (it != ch0->patches.end()) {
-            printf("ch=0 patch msb=%d lsb=%d program=%d\n",
-                it->second.msb, it->second.lsb, it->second.program);
+            return item.name;
         }
-        printf("ch=0 volume=%d\n", ch0->rawValues.at("volume"));
     }
 
-    // Checks
-    auto print = [&](int channel) {
-        const channelState* ch = state.getChannel(channel);
-        if (!ch) { printf("ch=%d -> no state\n", channel); return; }
-        for (const auto& [id, value] : ch->rawValues) printf("ch=%d %s=%d\n", channel, id.c_str(), value);
+    return std::nullopt;
+}
+
+// CALCULATIONS
+//
+//
+
+std::string stateLayer::mathVal(const ModuleObject& obj, int raw) const {
+    // Enum lookups take priority
+    if (auto name = effLookup(obj, raw))
+        return *name;
+
+    const std::string& transform = obj.displayOffset.transform;
+
+    if (transform == "pan_lcr") {
+        // Generic offset pan gets its own L/C/R formatting
+        int v = raw - 64;
+        if (v < 0) return std::to_string(-v) + "L";
+        if (v > 0) return std::to_string(v) + "R";
+        return "C";
+    }
+
+    if (transform == "frequency") {
+        // Master tuning calculation: 440*((X-1024)/8192)^2
+        double hz = 440.0 * std::pow(2.0, (raw - 1024.0) / 8192.0);
+        char buf[32];
+        std::snprintf(buf, sizeof(buf), "%.1f Hz", hz);
+        return buf;
+    }
+
+    // Generic offset, -64 turns 0-127 into -64/+63... etc...
+    return std::to_string(raw + obj.displayOffset.offset);
+}
+
+std::optional<std::string> stateLayer::finalVal(int channel, const std::string& objectId) const {
+    const channelState* ch = getChannel(channel);
+    if (!ch) return std::nullopt;
+
+    auto valueIt = ch->rawValues.find(objectId);
+    if (valueIt == ch->rawValues.end()) return std::nullopt;
+
+    auto objIt = objectById_.find(objectId);
+    if (objIt == objectById_.end()) return std::nullopt;
+
+    return mathVal(*objIt->second, valueIt->second);
+}
+
+// NOTE STATE (Contributes to polyphony count)
+//
+//
+
+void stateLayer::updtNote(channelState& ch, int note, int velocity, bool on) {
+    if (on) {
+        ch.activeNotes[note] = velocity;
+    } else {
+        ch.activeNotes.erase(note);
+    }
+    ch.lastNote = note;
+    ch.lastVelo = velocity;
+}
+
+// SAVE SNAPSHOT
+//
+//
+
+takeSnapshot stateLayer::snapshot(int channel) const {
+    takeSnapshot snap;
+
+    const channelState* ch = getChannel(channel);
+    if (!ch) return snap; // If channel isn't touched, it doesn't crash
+
+    for (const auto& [id, raw] : ch->rawValues) {
+        auto objIt = objectById_.find(id);
+        if (objIt == objectById_.end()) continue; // Shouldn't happen, but don't crash if it does
+        snap.values[id] = mathVal(*objIt->second, raw);
+    }
+
+    for (const auto& [id, patch] : ch->patches) {
+        snap.patchNames[id] = patchLookup(patch);
+    }
+
+    snap.polyCount = static_cast<int>(ch->activeNotes.size());
+    snap.lastNote = ch->lastNote;
+    snap.lastVelo = ch->lastVelo;
+
+    return snap;
+}
+
+
+
+
+
+// TEST VALUES
+//
+//
+
+int main(){
+    std::filesystem::path moduleDir = "../../modules/sd-90";
+
+    using json = nlohmann::json;
+
+    std::ifstream moduleFile(moduleDir / "module.json");
+    if (!moduleFile.is_open()) {
+        printf("Couldn't open: %s\n", (moduleDir / "module.json").c_str());
+        return 1;
+    }
+    json moduleJson;
+    moduleFile >> moduleJson;
+    moduleDef module = parseModule(moduleJson);
+
+    std::ifstream dictFile(moduleDir / "dictionary.json");
+    if (!dictFile.is_open()) {
+        printf("Couldn't open: %s\n", (moduleDir / "dictionary.json").c_str());
+        return 1;
+    }
+    json dictJson;
+    dictFile >> dictJson;
+    dictionaryDef dictionary = parseDictionary(dictJson);
+
+    // Fake SysEx: master tuning
+    RawEvent ev;
+    ev.kind = MsgKind::SysEx;
+    ev.channel = -1;
+    ev.data = {
+        0xF0, module.manufacturer, module.deviceId, 0x00, module.model, 0x12,
+        0x01, 0x00, 0x00, 0x00,   // Address
+        0x00, 0x04, 0x00, 0x00,   // Value (4 nibbles = 0x0400)
+        0x7B,                      // Checksum
+        0xF7
     };
 
-    print(0); // Should print sustain and volume
-    print(1); // Should print PB
-    print(2); // Should print "no state"
-    print(-1); // Should print "1024" and raw string
+    // Pan test object
+    ModuleObject panObj;
+    panObj.id = "pan";
+    panObj.type = kind::CC;
+    panObj.cc = 10;
+    panObj.displayOffset.transform = "pan_lcr";
 
-    // Fallback so an unknown kind doesn't crash
-    RawEvent junk;
-    junk.kind = MsgKind::NoteOn;
-    junk.channel = 5;
-    junk.data = { 0x95, 60, 100 };
-    state.eventHandler(junk);
-    print(5);
+    // Bipolar test object
+    ModuleObject bipolarObj;
+    bipolarObj.id = "bipolar_test";
+    bipolarObj.type = kind::CC;
+    bipolarObj.cc = 20;
+    bipolarObj.displayOffset.offset = -64; // Expect 36
+
+    module.objects.push_back(panObj);
+    module.objects.push_back(bipolarObj);
+
+    stateLayer state(module, dictionary); // Built after every object exists
+
+    RawEvent panEv;
+    panEv.kind = MsgKind::CC;
+    panEv.channel = 0;
+    panEv.data = { 0xB0, 10, 20 };
+    state.eventHandler(panEv);
+
+    RawEvent bipolarEv;
+    bipolarEv.kind = MsgKind::CC;
+    bipolarEv.channel = 0;
+    bipolarEv.data = { 0xB0, 20, 100 };
+    state.eventHandler(bipolarEv);
+
+    RawEvent noteOn;
+    noteOn.kind = MsgKind::NoteOn;
+    noteOn.channel = 0;
+    noteOn.velocity = 100;
+    noteOn.data = { 0x90, 60, 100 };
+    state.eventHandler(noteOn);
+
+    RawEvent noteOn2;
+    noteOn2.kind = MsgKind::NoteOn;
+    noteOn2.channel = 0;
+    noteOn2.velocity = 80;
+    noteOn2.data = { 0x90, 64, 80 };
+    state.eventHandler(noteOn2);
+
+    // Snapshot ch0
+    {
+        auto snap = state.snapshot(0);
+        for (const auto& [id, display] : snap.values)
+            printf("  %s = %s\n", id.c_str(), display.c_str());
+        printf("  poly = %d lastNote = %d lastVel = %d\n", snap.polyCount, snap.lastNote, snap.lastVelo);
+    }
+
+    RawEvent noteOff;
+    noteOff.kind = MsgKind::NoteOff;
+    noteOff.channel = 0;
+    noteOff.data = { 0x80, 60, 0 };
+    state.eventHandler(noteOff);
+
+    // Snapshot channel 0 to see poly change
+    {
+        auto snap = state.snapshot(0);
+        for (const auto& [id, display] : snap.values)
+            printf("  %s = %s\n", id.c_str(), display.c_str());
+        printf("  poly after note off = %d\n", snap.polyCount);
+    }
+
+    state.eventHandler(ev);
+
+    // Snapshot sysex
+    {
+        auto snap = state.snapshot(-1);
+        for (const auto& [id, display] : snap.values)
+            printf("  %s = %s\n", id.c_str(), display.c_str());
+    }
 }

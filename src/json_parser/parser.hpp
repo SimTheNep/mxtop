@@ -103,7 +103,7 @@ struct moduleDef // What actuall defines what module it is
     uint8_t model = 0;
     uint8_t deviceId = 0;
 
-    std::string checksum;
+    std::optional<std::string> checksum;
     std::string packet;
 
     std::vector<ModuleObject> objects;

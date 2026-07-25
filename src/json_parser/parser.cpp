@@ -407,7 +407,7 @@ void debugModule(const moduleDef& module)
     printf("Model: %u\n", module.model);
     printf("Device ID: %u\n", module.deviceId);
 
-    printf("Checksum: %s\n", module.checksum.c_str());
+    printf("Checksum: %s\n", module.checksum ? module.checksum->c_str() : "<none>");
     printf("Packet: %s\n", module.packet.c_str());
 
     printf("Objects:\n");
