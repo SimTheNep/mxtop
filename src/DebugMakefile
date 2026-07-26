@@ -1,0 +1,54 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -I. -Imidi_reader/craigsapp
+
+CRAIGAPP_SRCS = $(wildcard midi_reader/craigsapp/*.cpp)
+RTMIDI_FLAGS = $(shell pkg-config --cflags --libs rtmidi)
+
+# Shared by parser, state layer, and readers
+COMMON_SRCS = json_parser/parser.cpp \
+              state_layer/state.cpp \
+              midi_reader/midi_load.cpp \
+              $(CRAIGAPP_SRCS)
+
+# MAIN TEST (Outputs to src/maintest relative to current dir)
+MAIN_TEST_SRCS = main.cpp \
+                 tui/debug/debug_ui.cpp \
+                 $(COMMON_SRCS)
+MAIN_TEST_TARGET = maintest
+
+# MIDI READER TEST (Outputs to midi_reader/miditest)
+MIDI_TEST_SRCS = $(MAIN_TEST_SRCS)
+MIDI_TEST_TARGET = midi_reader/miditest
+
+# STATE TEST (Outputs to state_layer/statetest)
+STATE_TEST_SRCS = state_layer/state_test.cpp \
+                  $(COMMON_SRCS)
+STATE_TEST_TARGET = state_layer/statetest
+
+# JSON PARSER TEST (Outputs to json_parser/jsontest)
+JSON_TEST_SRCS = json_parser/scratch.cpp \
+                 json_parser/parser.cpp
+JSON_TEST_TARGET = json_parser/jsontest
+
+# BUILD RULES
+ALL_TARGETS = $(MAIN_TEST_TARGET) $(MIDI_TEST_TARGET) $(STATE_TEST_TARGET) $(JSON_TEST_TARGET)
+
+all: $(ALL_TARGETS)
+
+$(MAIN_TEST_TARGET): $(MAIN_TEST_SRCS)
+	@mkdir -p src
+	$(CXX) $(CXXFLAGS) $(MAIN_TEST_SRCS) $(RTMIDI_FLAGS) -lncurses -o $(MAIN_TEST_TARGET)
+
+$(MIDI_TEST_TARGET): $(MIDI_TEST_SRCS)
+	$(CXX) $(CXXFLAGS) $(MIDI_TEST_SRCS) $(RTMIDI_FLAGS) -lncurses -o $(MIDI_TEST_TARGET)
+
+$(STATE_TEST_TARGET): $(STATE_TEST_SRCS)
+	$(CXX) $(CXXFLAGS) $(STATE_TEST_SRCS) -o $(STATE_TEST_TARGET)
+
+$(JSON_TEST_TARGET): $(JSON_TEST_SRCS)
+	$(CXX) $(CXXFLAGS) $(JSON_TEST_SRCS) -o $(JSON_TEST_TARGET)
+
+clean:
+	rm -f $(ALL_TARGETS)
+
+.PHONY: all clean

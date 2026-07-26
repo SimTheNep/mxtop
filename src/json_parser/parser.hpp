@@ -3,13 +3,18 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <nlohmann/json.hpp> // Good JSON library, possibly the first result on google
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <cstdint>
 
 using json = nlohmann::json;
 
-// From types.hpp
+
+
+// KIND DEFINITIONS
+//
+//
+
 enum class kind
 {
     Patch,
@@ -18,31 +23,37 @@ enum class kind
     SysEx
 };
 
+
+
 // LAYOUTS
 // These do not pass through the state layer, they go straight to the UI
 //
-// 
-
+//
 
 struct layoutSect
 {
     std::vector<std::string> items;
 };
 
+
+
 struct layoutType
 {
-    std::unordered_map<std::string, layoutSect> views; // Stuff that shows in the channel view
+    std::unordered_map<std::string, layoutSect> views;   // Stuff that shows in the channel view
     std::unordered_map<std::string, layoutSect> widgets; // Everything else
 };
+
+
 
 struct layoutDef
 {
     std::unordered_map<std::string, layoutType> variants;
 };
 
+
+
 layoutDef parseLayouts(const nlohmann::json& j);
 void debugLayouts(const layoutDef& layouts);
-
 
 
 
@@ -57,12 +68,32 @@ struct display // This dictates the 0-127 offset
     std::string transform;
 };
 
+
+
+struct patchSysexPart { // One address-set per Part (A, B, ...)
+    int channel = 0;
+    std::optional<std::string> msb;
+    std::optional<std::string> lsb;
+    std::optional<std::string> program;
+};
+
+
+
+struct sysexPart { // Required for per-part SysEx
+    int channel = 0;
+    std::string address;
+};
+
+
+
 struct ModuleObject
 {
     std::string id;
 
     kind type;
     display displayOffset;
+
+    bool perPatch = false;
 
     // CC
     std::optional<uint8_t> cc;
@@ -92,9 +123,19 @@ struct ModuleObject
     std::optional<int> bytes;
     std::optional<std::string> encoding; 
 
+    // SysEx patch assignment
+    std::vector<patchSysexPart> patchSysexParts;
+
+    // Per part SysEx
+    std::vector<sysexPart> parts;
+
+    // Default value override
+    std::optional<int> defaultValue;
 };
 
-struct moduleDef // What actuall defines what module it is
+
+
+struct moduleDef // What actually defines what module it is
 {
     std::string id;
     std::string name;
@@ -109,13 +150,14 @@ struct moduleDef // What actuall defines what module it is
     std::vector<ModuleObject> objects;
 };
 
+
+
 moduleDef parseModule(const json& j);
 void debugModule(const moduleDef& module);
 
 
 
-
-// Dictionary
+// DICTIONARY
 //
 //
 
@@ -128,16 +170,21 @@ struct enumValue // Effect value + name + short name
 };
 
 
+
 struct enumDef // Effect definition
 {
     std::vector<enumValue> values;
 };
+
+
 
 struct bankSelec // Bank selector
 {
     std::optional<int> bankMSB;
     std::optional<int> bankLSB;
 };
+
+
 
 struct patchSelec // Patch selector
 {
@@ -149,9 +196,7 @@ struct patchSelec // Patch selector
     std::string name;
 };
 
-// patchBank and drumBank are used as an alternative way to write bank MSBs so you don't have to put it in every single program
-// I did this for the SD-90 banks because the presets were too many per banks
-// I didn't do it for GS and XGlite because I scraped the tables from the manuals and they have those numbers already there
+
 
 struct patchBank {
     std::string id;
@@ -160,42 +205,14 @@ struct patchBank {
     std::vector<patchSelec> items;
 };
 
+
+
 struct dictionaryDef { // Full dictionary
     std::unordered_map<std::string, enumDef> enums;
-    
     std::unordered_map<std::string, std::vector<patchBank>> bankGroups;
 };
 
-// OLD LOGIC, DO NOT MIND
 
-// struct patchBank
-// {
-//     std::string id;
-//     std::string name;
-
-//     bankSelec bank;
-
-//     std::vector<patchSelec> patches;
-// };
-
-// struct drumBank
-// {
-//     std::string id;
-//     std::string name;
-
-//     bankSelec bank;
-
-//     std::vector<patchSelec> drumKits;
-// };
-
-// struct dictionaryDef // Full dictionary
-// {
-//     std::unordered_map<std::string, enumDef> enums;
-
-//     std::vector<patchBank> patches;
-
-//     std::vector<drumBank> drumKits;
-// };
 
 dictionaryDef parseDictionary(const json& j);
 void debugDictionary(const dictionaryDef& dictionary);

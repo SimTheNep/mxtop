@@ -1,48 +1,53 @@
-#pragma once
+#ifndef DEBUG_UI_HPP
+#define DEBUG_UI_HPP
 
 #include "../../midi_reader/types.hpp"
+#include "../../state_layer/state.hpp"
 
-#include <array>
-#include <optional>
+#include <ncurses.h>
 #include <string>
 #include <vector>
+#include <map>
+#include <optional>
+#include <array>
 
-#include <ncurses.h> // ncurses used here for simplicity, it won't be in the final UI
-// Thanks to user analogq for telling me about ncurses and FTXUI
-
-// Info (port, file, timestamp), Labels (table header), Table (data)
-struct MidiUi {
+class MidiUi {
 public:
-
-    MidiUi(
-        const std::vector<std::string>& files,
-        const std::vector<std::string>& ports
-    );
-
+    MidiUi(const std::vector<std::string>& files, const std::vector<std::string>& ports);
     ~MidiUi();
 
-    // debug is currently unused, will be used for this UI when final UI is implemented
-    void addEvent(const RawEvent& ev, bool debug);
+    void addEvent(const RawEvent& ev, bool debug = false);
+    void addSnap(int channel, const takeSnapshot& snap, double timestampMs);
 
-private: // internal UI drawing stuff, don't touch
+private:
     void drawInfo();
     void drawLabels();
     void drawTable();
 
+    void drawStateLabels();
+    void drawStateTable();
+
+    void checkScrollInput();
     std::string formatMessage(const RawEvent& ev);
 
     WINDOW* info_ = nullptr;
     WINDOW* labels_ = nullptr;
-    WINDOW* log_ = nullptr;
+    WINDOW* log_ = nullptr; // Note: Used as an ncurses pad (newpad)
 
     int rows_ = 0;
     int cols_ = 0;
 
+    int infoHeight_ = 0;
+    int labelsHeight_ = 0;
+    int scrollOffset_ = 0;
+    int logPadRows_ = 500;
+
+    std::vector<std::string> files_;
+    std::vector<std::string> ports_;
     double lastTimestamp_ = 0.0;
 
-    std::vector<std::string> ports_;
-    std::vector<std::string> files_;
-
-    // Only holds the most recent event of its kind
-    std::array<std::optional<RawEvent>, 8> latest_;
+    std::array<std::optional<RawEvent>, 10> latest_;
+    std::map<int, takeSnapshot> stateSnapshots_;
 };
+
+#endif
