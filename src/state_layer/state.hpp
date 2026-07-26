@@ -11,8 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-
+#include <optional>
 
 // Other stuff
 struct channelState {
@@ -33,7 +32,11 @@ struct channelState {
     int lastVelo = 0;
 };
 
-
+// Universal Data Bind struct
+struct dataBind {
+    std::vector<std::optional<uint8_t>> pattern; // nullopt = [VAL]
+    const ModuleObject* obj = nullptr;
+};
 
 // Snapshot
 struct takeSnapshot {
@@ -43,8 +46,6 @@ struct takeSnapshot {
     int lastNote = -1;
     int lastVelo = 0;
 };
-
-
 
 // State
 class stateLayer {
@@ -91,6 +92,8 @@ private:
         bool hasProgram = false; // Sequence has PC
     };
 
+    bool dataHandler(const RawEvent& ev, channelState& sysCh);
+
     void handleSysEx(const RawEvent& ev, channelState& ch);
     void updtPC(channelState& ch, int program);
     void updtBank(channelState& ch, int ccNum, int value);
@@ -126,6 +129,8 @@ private:
     std::vector<sysexBinding> sysexIndex_;
     std::vector<patchSysexBinding> patchSysexIndex_;
     std::unordered_map<std::string, const ModuleObject*> objectById_;
+
+    std::vector<dataBind> dataIndex_;
 
     // Effect/enum name (kind -> value -> display name).
     std::unordered_map<std::string, std::unordered_map<int, std::string>> enumLookup_;

@@ -170,9 +170,9 @@ void stateLayer::initCh(channelState& ch, int channel) {
 
                 auto addr = hexToBytes(*obj.address);
 
-                if (addr.size() >= 3 && addr[2] == 0x20) {
-                    ch.rawValues.try_emplace(obj.id, initOffset(obj));
-                } else if (isRolandPart(addr)) {
+                // Use the full check
+                // The AFX was displaying in every channel without this
+                if (isRolandPart(addr)) {
                     ch.rawValues.try_emplace(obj.id, initOffset(obj));
                 }
             }
@@ -209,6 +209,10 @@ void stateLayer::initCh(channelState& ch, int channel) {
 stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary, MidiReader& reader) 
     : module_(module), dictionary_(dictionary), reader_(reader) {
 
+    // Real channel count in use,
+    // This cuts down the cost so the module doesn't lag (my SD-90 doesn't like 64-channels+ being sent to it)
+    const int totalChannels = std::max(1, static_cast<int>(reader_.sourceCount()) * reader_.midChannels());
+
     defaultPatchObject_ = nullptr;
 
         for (const auto& obj : module_.objects) {
@@ -223,7 +227,7 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
                     if (obj.parts.size() == 1 && obj.parts.front().channel == 0) {
                         const auto base = hexToBytes(obj.parts.front().address);
 
-                        for (int ch = 0; ch < 64; ++ch)
+                        for (int ch = 0; ch < totalChannels; ++ch)
                             sysexIndex_.push_back({
                                 getRolandPart(base, ch),
                                 &obj,
@@ -238,7 +242,7 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
                     auto addr = hexToBytes(*obj.address);
                     
                     if (isRolandPart(addr)) {
-                        for (int ch = 0; ch < 64; ++ch)
+                        for (int ch = 0; ch < totalChannels; ++ch)
                             sysexIndex_.push_back({
                                 getRolandPart(addr, ch),
                                 &obj,
@@ -252,6 +256,17 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
                             -1
                         });
                     }
+                } else if (obj.data) {
+                    std::vector<std::optional<uint8_t>> pattern;
+                    std::istringstream iss(*obj.data);
+                    std::string tok;
+                    while (iss >> tok) {
+                        if (tok == "[VAL]")
+                            pattern.push_back(std::nullopt);
+                        else
+                            pattern.push_back(static_cast<uint8_t>(std::stoul(tok, nullptr, 16)));
+                    }
+                    dataIndex_.push_back({ std::move(pattern), &obj });
                 }
                 
             } else if (obj.type == kind::Patch) {
@@ -272,7 +287,7 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
                         const auto baseLsb = part.lsb ? hexToBytes(*part.lsb) : baseMsb;
                         const auto basePrg = part.program ? hexToBytes(*part.program) : baseMsb;
 
-                        for (int ch = 0; ch < 64; ++ch) {
+                        for (int ch = 0; ch < totalChannels; ++ch) {
                             if (part.msb)
                                 patchSysexIndex_.push_back({getRolandPart(baseMsb, ch), &obj, patchField::Msb, ch});
                             if (part.lsb)
@@ -322,8 +337,45 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
         for (const auto& item : dict.values)
             lookup[item.id] = item.name;
     }
+
+    // Populates the System bucket
+    auto [sysIt, inserted] = channels_.try_emplace(-1);
+    if (inserted)
+        initCh(sysIt->second, -1);
 }
 
+
+// Fixed-format SysEx (Master Volume, GS/XG resets, etc.)
+bool stateLayer::dataHandler(const RawEvent& ev, channelState& sysCh) {
+    for (const auto& binding : dataIndex_) {
+        if (ev.data.size() != binding.pattern.size()) continue;
+
+        bool match = true;
+        std::vector<uint8_t> wildcards;
+        for (size_t i = 0; i < binding.pattern.size(); ++i) {
+            if (binding.pattern[i]) {
+                if (ev.data[i] != *binding.pattern[i]) { match = false; break; }
+            } else {
+                wildcards.push_back(ev.data[i]);
+            }
+        }
+        if (!match) continue;
+
+        // If it's a 2-byte value like Master Volume, combine them (LSB, MSB)
+        int value = binding.obj->defaultValue.value_or(1);
+        if (wildcards.size() >= 2) {
+            value = (wildcards[1] << 7) | wildcards[0];
+        } else if (wildcards.size() == 1) {
+            value = wildcards[0];
+        }
+
+        sysCh.rawValues[binding.obj->id] = value;
+
+        log("[DATA TEMPLATE] matched ", binding.obj->id, " value=", value);
+        return true;
+    }
+    return false;
+}
 
 
 void stateLayer::advance(double elapsedMs) {
@@ -407,9 +459,16 @@ void stateLayer::setMFX(channelState& targetCh, int outputAssign, int MFXSelect)
 //
 
 void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
-    if (ev.data.size() < headerLen_ + 2) return;
+    if (ev.data.size() < 4) return;
     if (ev.data.front() != 0xF0) return;
     if (ev.data.back() != 0xF7) return;
+
+    channelState& sysCh = channels_.at(-1);
+
+    if (dataHandler(ev, sysCh))
+        return;
+
+    if (ev.data.size() < headerLen_ + 2) return;
     if (ev.data[1] != module_.manufacturer) return;
     if (ev.data[2] != module_.deviceId) return;
     if (ev.data[4] != module_.model) return;
@@ -574,6 +633,18 @@ void stateLayer::eventHandler(const RawEvent& ev) {
     if (inserted) initCh(ch, ev.channel);
 
     switch (ev.kind) {
+        case MsgKind::NoteOn:
+            if (ev.data.size() >= 3) {
+                updtNote(ch, ev.data[1], ev.velocity, true);
+            }
+            break;
+
+        case MsgKind::NoteOff:
+            if (ev.data.size() >= 2) {
+                updtNote(ch, ev.data[1], 0, false);
+            }
+            break;
+        
         case MsgKind::CC:
             if (ev.data.size() >= 3 && ev.data[1] < 128) {
                 int ccNum = ev.data[1];
@@ -602,18 +673,6 @@ void stateLayer::eventHandler(const RawEvent& ev) {
         case MsgKind::ProgramChange:
             if (ev.data.size() >= 2) {
                 updtPC(ch, ev.data[1]);
-            }
-            break;
-
-        case MsgKind::NoteOn:
-            if (ev.data.size() >= 3) {
-                updtNote(ch, ev.data[1], ev.velocity, true);
-            }
-            break;
-
-        case MsgKind::NoteOff:
-            if (ev.data.size() >= 2) {
-                updtNote(ch, ev.data[1], 0, false);
             }
             break;
 
@@ -665,41 +724,43 @@ std::optional<std::string> stateLayer::effLookup(const ModuleObject& obj, int va
 
 std::optional<std::string> stateLayer::patchLookup(int channel, const channelState::patchState& patch) const {
     const std::string groupKey = (channel == 9) ? "drum_kits" : "patches";
-
     auto groupIt = dictionary_.bankGroups.find(groupKey);
-
     if (groupIt == dictionary_.bankGroups.end())
         return std::nullopt;
 
-    for (const auto& bank : groupIt->second) {
-        if (bank.bank.bankMSB && *bank.bank.bankMSB != patch.msb)
-            continue;
+    auto tryMatch = [&](int lsbToMatch) -> std::optional<std::string> {
+        for (const auto& bank : groupIt->second) {
+            if (bank.bank.bankMSB && *bank.bank.bankMSB != patch.msb) continue;
+            if (bank.bank.bankLSB && *bank.bank.bankLSB != lsbToMatch) continue;
 
-        if (bank.bank.bankLSB && *bank.bank.bankLSB != patch.lsb)
-            continue;
-
-        for (const auto& item : bank.items) {
-            bool programMatch = (item.program == patch.program) ||
-                                (item.program == patch.program + 1) ||
-                                (item.program + 1 == patch.program);
-
-            if (!programMatch)
-                continue;
-
-            if (item.bankMSB && *item.bankMSB != patch.msb)
-                continue;
-
-            if (item.bankLSB && *item.bankLSB != patch.lsb)
-                continue;
-
-            return item.name;
+            for (const auto& item : bank.items) {
+                bool programMatch = (item.program == patch.program) ||
+                                     (item.program == patch.program + 1) ||
+                                     (item.program + 1 == patch.program);
+                if (!programMatch) continue;
+                if (item.bankMSB && *item.bankMSB != patch.msb) continue;
+                if (item.bankLSB && *item.bankLSB != lsbToMatch) continue;
+                return item.name;
+            }
         }
+        return std::nullopt;
+    };
+
+    if (module_.id == "gs") {
+        // GS-only: SC-8850 > SC-88Pro > SC-88 > SC-55 fallback. lsb=0 loops back to 4.-
+        static const int tiers[] = {4, 3, 2, 1};
+        const int startTier = (patch.lsb == 0) ? 4 : patch.lsb;
+
+        for (int tier : tiers) {
+            if (tier > startTier) continue;
+            if (auto name = tryMatch(tier)) return name;
+        }
+    } else {
+        // Every other module, lsb is a literal value
+        if (auto name = tryMatch(patch.lsb)) return name;
     }
 
-    log("Lookup failed: MSB=", patch.msb,
-    " LSB=", patch.lsb,
-    " PC=", patch.program);
-
+    log("Lookup failed: MSB=", patch.msb, " LSB=", patch.lsb, " PC=", patch.program);
     return std::nullopt;
 }
 
@@ -829,9 +890,25 @@ takeSnapshot stateLayer::snapshot(int channel) const {
         snap.patchNames[patchId] = patchLookup(channel, patch);
     }
 
-    snap.polyCount = static_cast<int>(ch->activeNotes.size());
-    snap.lastNote = ch->lastNote;
-    snap.lastVelo = ch->lastVelo;
+    if (channel == -1) {
+        int totalPoly = 0;
+        int globalLastNote = -1;
+        int globalLastVelo = 0;
+        for (const auto& [chNum, cState] : channels_) {
+            totalPoly += static_cast<int>(cState.activeNotes.size());
+            if (cState.lastNote != -1) {
+                globalLastNote = cState.lastNote;
+                globalLastVelo = cState.lastVelo;
+            }
+        }
+        snap.polyCount = totalPoly;
+        snap.lastNote = globalLastNote;
+        snap.lastVelo = globalLastVelo;
+    } else {
+        snap.polyCount = static_cast<int>(ch->activeNotes.size());
+        snap.lastNote = ch->lastNote;
+        snap.lastVelo = ch->lastVelo;
+    }
 
     log("===== SNAPSHOT =====");
 

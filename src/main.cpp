@@ -182,14 +182,17 @@ int main(int argc, char** argv) {
                 if (useStateLayer) {
                     state->eventHandler(ev);
 
-                    if (ev.kind == MsgKind::SysEx) {
-                        // A SysEx message can update any channel's per-part data this way... now if you'll excuse me...
-                        // FUCK YOU THIS TOOK SO LONG TO FIX BECAUSE I KEPT LOOKING AT STATE.CPP BECAUSE I COULD SWEAR IT WAS THERE AHHHHHH
-                        ui.addSnap(-1, state->snapshot(-1), tCount);
-                        for (int ch : state->activeCh())
-                            ui.addSnap(ch, state->snapshot(ch), tCount);
-                    } else {
+                // Always push the system bucket snapshot first so global polyphony updates instantly
+                    ui.addSnap(-1, state->snapshot(-1), tCount);
+
+                    // Then update the specific channel that received the event
+                    if (ev.channel >= 0) {
                         ui.addSnap(ev.channel, state->snapshot(ev.channel), tCount);
+                    } else {
+                        // Fallback for active channels if channel is unassigned
+                        for (int ch : state->activeCh()) {
+                            ui.addSnap(ch, state->snapshot(ch), tCount);
+                        }
                     }
                 }
             }

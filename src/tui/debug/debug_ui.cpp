@@ -223,6 +223,25 @@ void MidiUi::drawStateLabels() {
 }
 
 void MidiUi::drawStateTable() {
+    // Count exactly how many rows this frame needs before touching the pad
+    // The old logPadRows_=500 overflowed
+    int neededRows = 0;
+    for (const auto& [channel, snap] : stateSnapshots_) {
+        neededRows += 1;                       // header
+        neededRows += snap.values.size();      // values
+        neededRows += snap.patchNames.size();  // patch names
+        neededRows += 1;                       // polyphony
+        neededRows += 1;                       // spacer
+    }
+
+    // Resize (with some headroom so this doesn't refire every single frame
+    // as content grows by one row at a time) if what we need has outgrown
+    // what the pad currently has.
+    if (neededRows > logPadRows_) {
+        logPadRows_ = neededRows + 64;
+        wresize(log_, logPadRows_, cols_);
+    }
+
     werase(log_);
 
     int row = 0;
