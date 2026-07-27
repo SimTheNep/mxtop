@@ -18,6 +18,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <unordered_set>
 
 // VARS
 std::vector<unsigned int> ports;
@@ -88,8 +89,14 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    if (inptFiles.empty() || ports.empty() || inptFiles.size() != ports.size()) {
-        std::fprintf(stderr, "need at least one --file and one --port, and counts must match (see --help)\n");
+    if (inptFiles.empty() || ports.empty()) {
+        std::fprintf(stderr, "need at least one --file and one --port\n");
+        return 1;
+    }
+
+    if (inptFiles.size() > 1 && inptFiles.size() != ports.size()) {
+        std::fprintf(stderr,
+            "when using multiple files, the number of --port values must match the number of --file values\n");
         return 1;
     }
 
@@ -123,12 +130,20 @@ int main(int argc, char** argv) {
         auto out = std::make_unique<RtMidiOut>();
 
         if (debug) {
-            std::fprintf(
-                stderr,
-                "[main] opening port %u for file '%s'...\n",
-                ports[i],
-                inptFiles[i].c_str()
-            );
+            if (inptFiles.size() == 1) {
+                std::fprintf(
+                    stderr,
+                    "[main] opening port %u for broadcast...\n",
+                    ports[i]
+                );
+            } else {
+                std::fprintf(
+                    stderr,
+                    "[main] opening port %u for file '%s'...\n",
+                    ports[i],
+                    inptFiles[i].c_str()
+                );
+            }
         }
 
         ports[i] >= out->getPortCount() ? (std::fprintf(stderr, "Port [%u] is invalid.\n", ports[i]), exit(1)) : (void)0;
@@ -145,7 +160,7 @@ int main(int argc, char** argv) {
         std::printf("Loading %zu file(s)...\n", inptFiles.size());
     }
     
-    reader.dataInit(inptFiles);
+    reader.dataInit(inptFiles, outs.size());
 
     // Only built in state mode (translates messages to module/dictionary json data)
     std::unique_ptr<stateLayer> state;
@@ -161,8 +176,10 @@ int main(int argc, char** argv) {
 
     auto initTime = std::chrono::steady_clock::now();
     std::vector<RawEvent> dataDump;
+    auto lastUiFrame = std::chrono::steady_clock::now();
+    const auto uiFrameInterval = std::chrono::microseconds(16667); // ~60 fps
 
-    // PLAYBACK LOOP
+// PLAYBACK LOOP
     while (running && reader.hasMoreEvents()) {
 
         tCount = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - initTime).count(); // Time count from playback
@@ -171,26 +188,51 @@ int main(int argc, char** argv) {
 
         if (reader.backlog(tCount, dataDump) && running) {
 
+            std::unordered_set<int> touchedChannels;
+            bool sawStateLayer = false;
+            bool sawSysEx = false;
+
             for (const auto& ev : dataDump) {
 
                 // Route data to output ports regardless of debug flag
-                if (!ev.data.empty() && ev.sourcePort >= 0 && static_cast<size_t>(ev.sourcePort) < outs.size()) {
-                    outs[ev.sourcePort]->sendMessage(&ev.data);
+                if (!ev.data.empty()) {
+                for (int port : ev.sourcePorts) {
+                    if (port >= 0 && static_cast<size_t>(port) < outs.size()) {
+                        outs[port]->sendMessage(&ev.data);
+                    }
+                }
                 }
 
-                // Only display debug UI output on --debug
                 if (useStateLayer) {
+                    sawStateLayer = true;
                     state->eventHandler(ev);
 
-                // Always push the system bucket snapshot first so global polyphony updates instantly
+                    if (ev.kind == MsgKind::SysEx) {
+                        sawSysEx = true;
+                    } else if (ev.channel >= 0) {
+                        touchedChannels.insert(ev.channel);
+                    }
+                } else {
+                    ui.addEvent(ev);
+                }
+            }
+
+            if (useStateLayer && sawStateLayer) {
+                auto now = std::chrono::steady_clock::now();
+
+                if (now - lastUiFrame >= uiFrameInterval) {
+                    lastUiFrame = now;
+
                     ui.addSnap(-1, state->snapshot(-1), tCount);
 
-                    // Then update the specific channel that received the event
-                    if (ev.channel >= 0) {
-                        ui.addSnap(ev.channel, state->snapshot(ev.channel), tCount);
-                    } else {
-                        // Fallback for active channels if channel is unassigned
+                    if (sawSysEx) {
                         for (int ch : state->activeCh()) {
+                            if (ch >= 0) {
+                                ui.addSnap(ch, state->snapshot(ch), tCount);
+                            }
+                        }
+                    } else {
+                        for (int ch : touchedChannels) {
                             ui.addSnap(ch, state->snapshot(ch), tCount);
                         }
                     }

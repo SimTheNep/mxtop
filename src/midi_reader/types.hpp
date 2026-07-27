@@ -24,7 +24,7 @@ struct RawEvent {
     int velocity;
 
     // Which port this event came from, used to know where to send the data after it gets merged into the stream
-    int sourcePort = 0;
+    std::vector<int> sourcePorts;
 
     // Ms from playback start.
     double timestamp = 0.0;

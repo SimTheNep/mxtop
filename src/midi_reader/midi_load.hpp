@@ -10,7 +10,6 @@
 
 enum class MidiMode { // This is goated
     Native,
-    GM1,
     GM2,
     GS,
     XG
@@ -30,6 +29,7 @@ struct MidiReader {
 
     void dataInit(
         const std::vector<std::string>& filenames,
+        size_t outputCount = 1,
         int midChannels = 16 // Offsets the channels (see types.hpp)
     );
 

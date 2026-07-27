@@ -94,6 +94,10 @@ struct ModuleObject
     display displayOffset;
 
     bool perPatch = false;
+    bool controlsRhythm = false;
+
+    // Drum bank MSB
+    std::optional<std::vector<int>> drumBankMsb;
 
     // CC
     std::optional<uint8_t> cc;
@@ -139,6 +143,9 @@ struct moduleDef // What actually defines what module it is
 {
     std::string id;
     std::string name;
+
+    int headerLen = 6;
+    int addressWidth = 4;
 
     uint8_t manufacturer = 0;
     uint8_t model = 0;

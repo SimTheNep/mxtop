@@ -61,6 +61,9 @@ static kind parseKind(const std::string& s) {
 moduleDef parseModule(const json& j) {
     moduleDef def;
 
+    if (j.contains("header_length"))  def.headerLen     = j["header_length"].get<int>();
+    if (j.contains("address_width"))  def.addressWidth  = j["address_width"].get<int>();
+
     def.id = j.at("id").get<std::string>();
     def.name = j.at("name").get<std::string>();
 
@@ -85,6 +88,26 @@ moduleDef parseModule(const json& j) {
         obj.id = objJson.at("id").get<std::string>();
         obj.type = parseKind(objJson.at("kind").get<std::string>());
         obj.perPatch = objJson.value("per_patch", false);
+        obj.controlsRhythm = objJson.value("controls_rhythm", false);
+
+        if (objJson.contains("drum_msb")) {
+            auto drumJson = objJson["drum_msb"];
+            
+            // Array support [104, 105, 106, 107]
+            if (drumJson.is_array()) {
+                obj.drumBankMsb = drumJson.get<std::vector<int>>();
+            } 
+            // Scalable Range support {"start": 104, "end": 107}
+            else if (drumJson.is_object() && drumJson.contains("start") && drumJson.contains("end")) {
+                std::vector<int> msbs;
+                int start = drumJson["start"].get<int>();
+                int end = drumJson["end"].get<int>();
+                for (int i = start; i <= end; ++i) {
+                    msbs.push_back(i);
+                }
+                obj.drumBankMsb = msbs;
+            }
+        }
 
         if (objJson.contains("display")) {
             auto d = objJson["display"];
@@ -149,11 +172,46 @@ moduleDef parseModule(const json& j) {
 
         // Per-patch SysEx
         if (objJson.contains("parts") && obj.type == kind::SysEx) {
-            for (const auto& partJson : objJson["parts"]) {
-                sysexPart part;
-                part.channel = partJson.value("channel", 0);
-                part.address = partJson.at("address").get<std::string>();
-                obj.parts.push_back(part);
+            auto partsJson = objJson["parts"];
+            
+            // Array support
+            if (partsJson.is_array()) {
+                for (const auto& partJson : partsJson) {
+                    sysexPart part;
+                    part.channel = partJson.value("channel", 0);
+                    part.address = partJson.at("address").get<std::string>();
+                    obj.parts.push_back(part);
+                    
+                    printf("PART %2d -> %s\n",
+                        part.channel,
+                        part.address.c_str());
+                }
+            } 
+            // Scalable formula support
+            else if (partsJson.is_object()) {
+                std::string baseStr = partsJson.value("base", "");
+                std::string strideStr = partsJson.value("stride", "");
+                auto channels = partsJson.value("channels", std::vector<int>{});
+
+                if (!baseStr.empty() && !strideStr.empty()) {
+                    uint32_t baseVal = std::stoul(baseStr, nullptr, 16);
+                    uint32_t strideVal = std::stoul(strideStr, nullptr, 16);
+                    
+                    int width = baseStr.length(); 
+                    std::string fmt = "%0" + std::to_string(width) + "X";
+
+                    for (size_t i = 0; i < channels.size(); ++i) {
+                        sysexPart part;
+                        part.channel = channels[i];
+                        uint32_t addr = baseVal + (i * strideVal);
+                        
+                        char buf[16];
+                        std::snprintf(buf, sizeof(buf), fmt.c_str(), addr);
+                        part.address = std::string(buf);
+                        
+                        obj.parts.push_back(part);
+                    }
+                }
             }
         }
 

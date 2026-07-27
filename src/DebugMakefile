@@ -1,54 +1,83 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -I. -Imidi_reader/craigsapp
+CXX := g++
 
-CRAIGAPP_SRCS = $(wildcard midi_reader/craigsapp/*.cpp)
-RTMIDI_FLAGS = $(shell pkg-config --cflags --libs rtmidi)
+CXXFLAGS := -std=c++17 -I. -Imidi_reader/craigsapp
+RTMIDI_CFLAGS := $(shell pkg-config --cflags rtmidi)
+RTMIDI_LIBS   := $(shell pkg-config --libs rtmidi)
 
-# Shared by parser, state layer, and readers
-COMMON_SRCS = json_parser/parser.cpp \
-              state_layer/state.cpp \
-              midi_reader/midi_load.cpp \
-              $(CRAIGAPP_SRCS)
+CXXFLAGS += $(RTMIDI_CFLAGS)
 
-# MAIN TEST (Outputs to src/maintest relative to current dir)
-MAIN_TEST_SRCS = main.cpp \
-                 tui/debug/debug_ui.cpp \
-                 $(COMMON_SRCS)
-MAIN_TEST_TARGET = maintest
+CRAIGAPP_SRCS := $(wildcard midi_reader/craigsapp/*.cpp)
+CRAIGAPP_OBJS := $(CRAIGAPP_SRCS:.cpp=.o)
 
-# MIDI READER TEST (Outputs to midi_reader/miditest)
-MIDI_TEST_SRCS = $(MAIN_TEST_SRCS)
-MIDI_TEST_TARGET = midi_reader/miditest
+COMMON_SRCS := \
+	json_parser/parser.cpp \
+	state_layer/state.cpp \
+	midi_reader/midi_load.cpp \
+	$(CRAIGAPP_SRCS)
 
-# STATE TEST (Outputs to state_layer/statetest)
-STATE_TEST_SRCS = state_layer/state_test.cpp \
-                  $(COMMON_SRCS)
-STATE_TEST_TARGET = state_layer/statetest
+COMMON_OBJS := $(COMMON_SRCS:.cpp=.o)
 
-# JSON PARSER TEST (Outputs to json_parser/jsontest)
-JSON_TEST_SRCS = json_parser/scratch.cpp \
-                 json_parser/parser.cpp
-JSON_TEST_TARGET = json_parser/jsontest
+MAIN_SRCS := \
+	main.cpp \
+	tui/debug/debug_ui.cpp
 
-# BUILD RULES
-ALL_TARGETS = $(MAIN_TEST_TARGET) $(MIDI_TEST_TARGET) $(STATE_TEST_TARGET) $(JSON_TEST_TARGET)
+MAIN_OBJS := $(MAIN_SRCS:.cpp=.o)
 
-all: $(ALL_TARGETS)
+STATE_SRCS := \
+	state_layer/state_test.cpp
 
-$(MAIN_TEST_TARGET): $(MAIN_TEST_SRCS)
-	@mkdir -p src
-	$(CXX) $(CXXFLAGS) $(MAIN_TEST_SRCS) $(RTMIDI_FLAGS) -lncurses -o $(MAIN_TEST_TARGET)
+STATE_OBJS := $(STATE_SRCS:.cpp=.o)
 
-$(MIDI_TEST_TARGET): $(MIDI_TEST_SRCS)
-	$(CXX) $(CXXFLAGS) $(MIDI_TEST_SRCS) $(RTMIDI_FLAGS) -lncurses -o $(MIDI_TEST_TARGET)
+JSON_SRCS := \
+	json_parser/scratch.cpp \
+	json_parser/parser.cpp
 
-$(STATE_TEST_TARGET): $(STATE_TEST_SRCS)
-	$(CXX) $(CXXFLAGS) $(STATE_TEST_SRCS) -o $(STATE_TEST_TARGET)
+JSON_OBJS := $(JSON_SRCS:.cpp=.o)
 
-$(JSON_TEST_TARGET): $(JSON_TEST_SRCS)
-	$(CXX) $(CXXFLAGS) $(JSON_TEST_SRCS) -o $(JSON_TEST_TARGET)
+MAIN_TARGET := maintest
+MIDI_TARGET := midi_reader/miditest
+STATE_TARGET := state_layer/statetest
+JSON_TARGET := json_parser/jsontest
+
+ALL_TARGETS := \
+	$(MAIN_TARGET) \
+	$(MIDI_TARGET) \
+	$(STATE_TARGET) \
+	$(JSON_TARGET)
+
+all: $(ALL_TARGETS) cleanup-objects
+
+%.o: %.cpp
+	@printf "[CXX] %s\n" "$<"
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(MAIN_TARGET): $(MAIN_OBJS) $(COMMON_OBJS)
+	@printf "[LD ] %s\n" "$@"
+	@$(CXX) $^ $(RTMIDI_LIBS) -lncurses -o $@
+
+$(MIDI_TARGET): $(MAIN_OBJS) $(COMMON_OBJS)
+	@printf "[LD ] %s\n" "$@"
+	@mkdir -p midi_reader
+	@$(CXX) $^ $(RTMIDI_LIBS) -lncurses -o $@
+
+$(STATE_TARGET): $(STATE_OBJS) $(COMMON_OBJS)
+	@printf "[LD ] %s\n" "$@"
+	@mkdir -p state_layer
+	@$(CXX) $^ -o $@
+
+$(JSON_TARGET): $(JSON_OBJS)
+	@printf "[LD ] %s\n" "$@"
+	@mkdir -p json_parser
+	@$(CXX) $^ -o $@
+
+cleanup-objects:
+	@printf "[RM ] object files\n"
+	@find . -name "*.o" -delete
 
 clean:
-	rm -f $(ALL_TARGETS)
+	@printf "[RM ] object files\n"
+	@find . -name "*.o" -delete
+	@printf "[RM ] executables\n"
+	@rm -f $(ALL_TARGETS)
 
-.PHONY: all clean
+.PHONY: all clean cleanup-objects

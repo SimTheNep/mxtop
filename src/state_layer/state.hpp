@@ -17,6 +17,14 @@
 struct channelState {
     std::unordered_map<std::string, int> rawValues; // Object id outputs last raw value
 
+    bool rhythmFromSysEx = false;
+    bool rhythmFromBank  = false;
+
+    bool isRhythm() const
+    {
+        return rhythmFromSysEx || rhythmFromBank;
+    }
+
     struct patchState { // Patches
         int msb = 0;
         int lsb = 0;
@@ -61,7 +69,7 @@ public:
     std::vector<int> activeCh() const;
 
     std::optional<std::string> effLookup(const ModuleObject& obj, int value) const;
-    std::optional<std::string> patchLookup(int channel, const channelState::patchState& patch) const;
+    std::optional<std::string> patchLookup(bool isRhythm, const channelState::patchState& patch) const;
 
     std::string mathVal(const ModuleObject& obj, int raw) const;
     std::optional<std::string> finalVal(int channel, const std::string& objectId) const;
@@ -96,7 +104,7 @@ private:
 
     void handleSysEx(const RawEvent& ev, channelState& ch);
     void updtPC(channelState& ch, int program);
-    void updtBank(channelState& ch, int ccNum, int value);
+    void updtBank(channelState& ch, int channel, int ccNum, int value);
     void updtNote(channelState& ch, int note, int velocity, bool on);
     void storeValue(channelState& ch, const std::vector<const ModuleObject*>& targets, int value);
     void initCh(channelState& ch, int channel);
@@ -121,7 +129,8 @@ private:
     const dictionaryDef& dictionary_;
     MidiReader& reader_;
 
-    static constexpr size_t headerLen_ = 6;
+    size_t headerLen_;
+    size_t addrWidth_;
 
     std::array<std::vector<const ModuleObject*>, 128> ccIndex_{}; 
     std::vector<const ModuleObject*> pitchBendIndex_;

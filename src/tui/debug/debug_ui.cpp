@@ -60,25 +60,40 @@ std::string hexBytes(const RawEvent& ev) {
     return s;
 }
 
+// Map MsgKind to a safe index within the array size of 10
+inline size_t kindToIndex(MsgKind k) {
+    switch (k) {
+        case MsgKind::NoteOff:           return 0;
+        case MsgKind::NoteOn:            return 1;
+        case MsgKind::PolyAftertouch:    return 2;
+        case MsgKind::CC:                return 3;
+        case MsgKind::ProgramChange:     return 4;
+        case MsgKind::ChannelAftertouch: return 5;
+        case MsgKind::PitchBend:         return 6;
+        case MsgKind::SysEx:             return 7;
+        default:                         return 8;
+    }
+}
+
 // UI FUNCTS
-MidiUi::MidiUi(
-    const std::vector<std::string>& files,
-    const std::vector<std::string>& ports
-)
-    : files_(files),
-      ports_(ports)
-{
+MidiUi::MidiUi(const std::vector<std::string>& files, const std::vector<std::string>& ports ) : files_(files), ports_(ports) {
     initscr();
     noecho();
     cbreak();
     curs_set(0);
-    keypad(stdscr, TRUE); // Enable arrow keys
-    nodelay(stdscr, TRUE); // Non-blocking user input check for scrolling
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
 
     getmaxyx(stdscr, rows_, cols_);
 
-    infoHeight_ = 3 + files_.size() * 3;
     labelsHeight_ = 2;
+
+    infoHeight_ = 3;
+
+    if (files_.size() == 1)
+        infoHeight_ += 1 + ports_.size();
+    else
+        infoHeight_ += files_.size() * 3;
 
     info_ = newwin(infoHeight_, cols_, 0, 0);
     labels_ = newwin(labelsHeight_, cols_, infoHeight_, 0);
@@ -153,10 +168,11 @@ void MidiUi::checkScrollInput() {
 
 void MidiUi::addEvent(const RawEvent& ev, bool) {
     lastTimestamp_ = ev.timestamp;
-    latest_[ static_cast<int>(ev.kind) ] = ev;
+    latest_[kindToIndex(ev.kind)] = ev;
 
     checkScrollInput();
     drawInfo();
+    drawLabels();
     drawTable();
 }
 
@@ -166,10 +182,33 @@ void MidiUi::drawInfo() {
     mvwprintw(info_, 1, 0, "Current Timestamp: %.1f ms", lastTimestamp_);
 
     int row = 3;
-    for (size_t i = 0; i < ports_.size(); ++i) {
-        mvwprintw(info_, row++, 0, "%s", std::filesystem::path(files_[i]).filename().string().c_str());
-        mvwprintw(info_, row++, 2, "Port [%zu]: %s", i, ports_[i].c_str());
-        row++;
+
+    if (files_.size() == 1) {
+        mvwprintw(info_, row++, 0,
+            "%s",
+            std::filesystem::path(files_[0]).filename().string().c_str());
+
+        for (size_t i = 0; i < ports_.size(); ++i) {
+            mvwprintw(info_, row++, 2,
+                "Port [%zu]: %s",
+                i,
+                ports_[i].c_str());
+        }
+    } else {
+        for (size_t i = 0; i < files_.size(); ++i) {
+            mvwprintw(info_, row++, 0,
+                "%s",
+                std::filesystem::path(files_[i]).filename().string().c_str());
+
+            if (i < ports_.size()) {
+                mvwprintw(info_, row++, 2,
+                    "Port [%zu]: %s",
+                    i,
+                    ports_[i].c_str());
+            }
+
+            row++;
+        }
     }
     wrefresh(info_);
 }
@@ -224,7 +263,6 @@ void MidiUi::drawStateLabels() {
 
 void MidiUi::drawStateTable() {
     // Count exactly how many rows this frame needs before touching the pad
-    // The old logPadRows_=500 overflowed
     int neededRows = 0;
     for (const auto& [channel, snap] : stateSnapshots_) {
         neededRows += 1;                       // header
@@ -234,9 +272,7 @@ void MidiUi::drawStateTable() {
         neededRows += 1;                       // spacer
     }
 
-    // Resize (with some headroom so this doesn't refire every single frame
-    // as content grows by one row at a time) if what we need has outgrown
-    // what the pad currently has.
+    // Resize if what we need has outgrown what the pad currently has
     if (neededRows > logPadRows_) {
         logPadRows_ = neededRows + 64;
         wresize(log_, logPadRows_, cols_);
@@ -247,7 +283,7 @@ void MidiUi::drawStateTable() {
     int row = 0;
 
     for (const auto& [channel, snap] : stateSnapshots_) {
-    bool hasResolvedPatch = false;
+        bool hasResolvedPatch = false;
         for (const auto& [id, name] : snap.patchNames) {
             if (name.has_value()) {
                 hasResolvedPatch = true;

@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 static std::ofstream dbg("state_debug.log", std::ios::trunc);
 
@@ -27,6 +28,20 @@ static void log(Args&&... args)
 // HELPER FUNCTIONS
 //
 // Implemented later because of repetition and stuff
+
+// Helper function to decode the SysEx just to be more efficient
+static uint32_t toAddrNum(const std::vector<uint8_t>& addr) {
+    uint32_t n = 0;
+    for (uint8_t b : addr) n = (n << 8) | b;
+
+    return n;
+}
+
+static std::string hexAddr(uint32_t n) {
+    std::ostringstream ss;
+    ss << std::hex << std::uppercase << std::setw(6) << std::setfill('0') << n;
+    return ss.str();
+}
 
 channelState::patchState* stateLayer::activePatch(channelState& ch)
 {
@@ -63,6 +78,29 @@ static std::vector<uint8_t> getRolandPart(const std::vector<uint8_t>& baseAddr, 
     
     std::vector<uint8_t> addr = baseAddr;
 
+    // Standard Roland GS 3-byte address mapping (0x40 0x1x 0xyy)
+    if (baseAddr.size() == 3 && baseAddr[0] == 0x40) {
+        int ch = channel % 16;
+        uint8_t partByte = 0x10;
+
+        // GS Part mapping: Part 10 = 0x10, Part 1..9 = 0x11..0x19, Part 11..16 = 0x1A..0x1F
+        if (ch == 9) { 
+            partByte = 0x10;
+        } else if (ch < 9) { 
+            partByte = static_cast<uint8_t>(0x11 + ch);
+        } else { 
+            partByte = static_cast<uint8_t>(0x1A + (ch - 10));
+        }
+
+        // Handle Part B offset (channels 16-31)
+        if (channel >= 16) { 
+            partByte = (partByte & 0x0F) | 0x20;
+        }
+
+        addr[1] = partByte;
+        return addr;
+    }
+
     // SD-90 / Sound Canvas Part mapping:
     // Channels 0-15 (Part A): 0x20 to 0x2F
     // Channels 16-31 (Part B): 0x30 to 0x3F
@@ -78,10 +116,15 @@ static std::vector<uint8_t> getRolandPart(const std::vector<uint8_t>& baseAddr, 
 
 
 static bool isRolandPart(const std::vector<uint8_t>& addr) {
-return addr.size() >= 4 &&
-       addr[0] == 0x10 &&
-       addr[1] == 0x00 &&
-       addr[2] == 0x20;
+    // GS 3-byte address space (0x40 1x xx or 0x40 2x xx)
+    if (addr.size() == 3 && addr[0] == 0x40 && ((addr[1] & 0xF0) == 0x10 || (addr[1] & 0xF0) == 0x20))
+        return true;
+
+    // SD-90 4-byte native address space (0x10 0x00 0x20 xx)
+    return addr.size() >= 4 &&
+           addr[0] == 0x10 &&
+           addr[1] == 0x00 &&
+           (addr[2] & 0xF0) == 0x20;
 }
 
 
@@ -115,7 +158,7 @@ static channelState::patchState defaultPatch(const ModuleObject& obj) {
         p.lsb = it->second;
 
     if (auto it = obj.fields.find("program"); it != obj.fields.end())
-        p.program = it->second + 1;
+        p.program = it->second;
 
     return p;
 }
@@ -146,6 +189,15 @@ static int initOffset(const ModuleObject& obj) {
 
 void stateLayer::initCh(channelState& ch, int channel) {
     const bool isSysBucket = (channel == -1);
+
+    if (!isSysBucket) {
+        const int block = reader_.midChannels();
+        ch.rhythmFromSysEx = false;
+        ch.rhythmFromBank  = false;
+
+        if (block > 0 && (channel % block == 9))
+            ch.rhythmFromBank = true;
+    }
 
     for (const auto& obj : module_.objects) {
         if (obj.type == kind::SysEx) { // SysEx with part support
@@ -206,8 +258,17 @@ void stateLayer::initCh(channelState& ch, int channel) {
 
 
 
-stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary, MidiReader& reader) 
-    : module_(module), dictionary_(dictionary), reader_(reader) {
+stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary, MidiReader& reader)
+    : module_(module), dictionary_(dictionary), reader_(reader),
+      headerLen_(static_cast<size_t>(module.headerLen)),
+      addrWidth_(static_cast<size_t>(module.addressWidth)) {
+
+    log("Module loaded:", module_.id);
+    log("headerLen=", headerLen_);
+    log("addrWidth=", addrWidth_);
+    log("manufacturer=", (int)module_.manufacturer);
+    log("model=", (int)module_.model);
+    log("sysexIndex size=", sysexIndex_.size());
 
     // Real channel count in use,
     // This cuts down the cost so the module doesn't lag (my SD-90 doesn't like 64-channels+ being sent to it)
@@ -309,8 +370,6 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
         }
     }
 
-    log("patchSysexIndex size=", patchSysexIndex_.size());
-
     for (const auto& b : patchSysexIndex_) {
         std::ostringstream ss;
 
@@ -321,14 +380,6 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
                << std::setfill('0')
                << (int)x << ' ';
 
-        log("PATCH ",
-            b.obj->id,
-            " field=",
-            (int)b.field,
-            " ch=",
-            b.channel,
-            " addr=",
-            ss.str());
     }
 
     for (const auto& [name, dict] : dictionary_.enums) {
@@ -338,14 +389,41 @@ stateLayer::stateLayer(const moduleDef& module, const dictionaryDef& dictionary,
             lookup[item.id] = item.name;
     }
 
-    // Populates the System bucket
-    auto [sysIt, inserted] = channels_.try_emplace(-1);
-    if (inserted)
-        initCh(sysIt->second, -1);
+    // Sort once here instead of scanning every entry for every incoming SysEx message
+    std::sort(sysexIndex_.begin(), sysexIndex_.end(),
+        [](const sysexBinding& a, const sysexBinding& b) {
+            return toAddrNum(a.addr) < toAddrNum(b.addr);
+        });
+
+    for (const auto& b : sysexIndex_) {
+        if (b.obj->id == "rhythm_part") {
+            std::ostringstream ss;
+            ss << std::hex << std::uppercase
+            << std::setw(6) << std::setfill('0')
+            << toAddrNum(b.addr);
+
+            log("Indexed rhythm addr=", ss.str(),
+                " ch=", b.channel);
+        }
+    }
+
+    std::sort(patchSysexIndex_.begin(), patchSysexIndex_.end(),
+        [](const patchSysexBinding& a, const patchSysexBinding& b) {
+            return toAddrNum(a.addr) < toAddrNum(b.addr);
+        });
+
+    for (const auto& obj : module_.objects) {
+        log("Object ", obj.id, " type=", (int)obj.type);
+
+        if (!obj.parts.empty()) {
+            for (const auto& p : obj.parts)
+                log("  part ", p.channel, " addr=", p.address);
+        }
+    }
 }
 
 
-// Fixed-format SysEx (Master Volume, GS/XG resets, etc.)
+// Fixed-format SysEx (Master Volume, GS/XG resets, etc...)
 bool stateLayer::dataHandler(const RawEvent& ev, channelState& sysCh) {
     for (const auto& binding : dataIndex_) {
         if (ev.data.size() != binding.pattern.size()) continue;
@@ -371,7 +449,7 @@ bool stateLayer::dataHandler(const RawEvent& ev, channelState& sysCh) {
 
         sysCh.rawValues[binding.obj->id] = value;
 
-        log("[DATA TEMPLATE] matched ", binding.obj->id, " value=", value);
+        // log("[DATA TEMPLATE] matched ", binding.obj->id, " value=", value);
         return true;
     }
     return false;
@@ -419,6 +497,11 @@ void stateLayer::setPatch(channelState& targetCh, const ModuleObject& obj, patch
         }
     }
 
+    // log("setPatch ",
+    // obj.id,
+    // " field=", (int)field,
+    // " value=", value);
+
     switch (field) {
         case patchField::Msb:
             it->second.msb = value;
@@ -427,18 +510,28 @@ void stateLayer::setPatch(channelState& targetCh, const ModuleObject& obj, patch
             it->second.lsb = value;
             break;
         case patchField::Program:
-            it->second.program = value + 1;
+            it->second.program = value;
             break;
     }
 
-    dbg << "[PATCH] "
-        << obj.id
-        << " MSB=" << it->second.msb
-        << " LSB=" << it->second.lsb
-        << " PC=" << it->second.program
-        << '\n';
+    // log(" -> MSB=", it->second.msb,
+    // " LSB=", it->second.lsb,
+    // " Program=", it->second.program);
 
-    dbg.flush();
+    // log("PATCH ",
+    // obj.id,
+    // " MSB=", it->second.msb,
+    // " LSB=", it->second.lsb,
+    // " Program=", it->second.program);
+
+    // dbg << "[PATCH] "
+    //     << obj.id
+    //     << " MSB=" << it->second.msb
+    //     << " LSB=" << it->second.lsb
+    //     << " PC=" << it->second.program
+    //     << '\n';
+
+    // dbg.flush();
 }
 
 void stateLayer::setMFX(channelState& targetCh, int outputAssign, int MFXSelect) {
@@ -448,9 +541,9 @@ void stateLayer::setMFX(channelState& targetCh, int outputAssign, int MFXSelect)
     patch->values["output_assign"] = outputAssign;
     patch->values["mfx"] = (outputAssign == 0x0D) ? MFXSelect : 0;
 
-    dbg << "[MFX ASSIGNMENT] OutputAssign=" << outputAssign 
-        << " MFXSelect=" << patch->values["mfx"] << '\n';
-    dbg.flush();
+    // dbg << "[MFX ASSIGNMENT] OutputAssign=" << outputAssign 
+    //     << " MFXSelect=" << patch->values["mfx"] << '\n';
+    // dbg.flush();
 }
 
 
@@ -459,23 +552,45 @@ void stateLayer::setMFX(channelState& targetCh, int outputAssign, int MFXSelect)
 //
 
 void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
+
     if (ev.data.size() < 4) return;
     if (ev.data.front() != 0xF0) return;
     if (ev.data.back() != 0xF7) return;
 
-    channelState& sysCh = channels_.at(-1);
+    auto [sysChIt, sysInserted] = channels_.try_emplace(-1);
+    if (sysInserted) initCh(sysChIt->second, -1);
 
-    if (dataHandler(ev, sysCh))
+    bool handled = dataHandler(ev, sysChIt->second);
+    if (handled)
         return;
 
-    if (ev.data.size() < headerLen_ + 2) return;
-    if (ev.data[1] != module_.manufacturer) return;
-    if (ev.data[2] != module_.deviceId) return;
-    if (ev.data[4] != module_.model) return;
-    if (ev.data[5] != 0x12) return;
+    if (module_.manufacturer && ev.data[1] != module_.manufacturer) {
+        log("RETURN manufacturer");
+        return;
+    }
 
-    log("=== SysEx received ===");
-    log("size=", ev.data.size());
+    if (module_.deviceId && ev.data[2] != module_.deviceId) {
+        log("RETURN device");
+        return;
+    }
+
+    if (module_.model && ev.data[headerLen_ - 2] != module_.model) {
+        log("RETURN model");
+        return;
+    }
+
+    log("Passed header checks");
+
+    if (module_.checksum == "roland") {
+        const size_t checksumIndex = ev.data.size() - 2;
+
+        bool ok = verifyRolandChecksum(ev.data, headerLen_, checksumIndex);
+
+        log("Checksum=", ok);
+
+        if (!ok)
+            return;
+    }
 
     std::ostringstream dump;
     for (uint8_t b : ev.data) {
@@ -485,45 +600,95 @@ void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
             << std::setfill('0')
             << (int)b << ' ';
     }
-    log(dump.str());
 
-    if (module_.checksum == "roland") {
-        const size_t checksumIndex = ev.data.size() - 2;
+    log("Packet: ", dump.str());
 
-        bool ok = verifyRolandChecksum(ev.data, headerLen_, checksumIndex);
+    std::ostringstream modelExpected, modelActual, cmdActual;
 
-        log("checksum=", ok);
+    modelExpected << std::hex << std::uppercase << (int)module_.model;
+    modelActual   << std::hex << std::uppercase << (int)ev.data[headerLen_ - 2];
+    cmdActual     << std::hex << std::uppercase << (int)ev.data[headerLen_ - 1];
 
-        if (!ok)
-            return;
+    log("Model expected=0x", modelExpected.str(),
+        " actual=0x", modelActual.str(),
+        " index=", headerLen_ - 2);
+
+    log("Command expected=0x12",
+        " actual=0x", cmdActual.str(),
+        " index=", headerLen_ - 1);
+
+    if (ev.data[headerLen_ - 1] != 0x12) {
+        log("RETURN command");
+        return;
     }
 
-    if (ev.data.size() < headerLen_ + 6) return;
+    // Dump the three address bytes
+    std::ostringstream addrBytes;
+    addrBytes << std::hex << std::uppercase
+            << std::setw(2) << std::setfill('0') << (int)ev.data[headerLen_] << ' '
+            << std::setw(2) << (int)ev.data[headerLen_ + 1] << ' '
+            << std::setw(2) << (int)ev.data[headerLen_ + 2];
+
+    log("Address bytes=", addrBytes.str());
 
     uint32_t msgAddr = 0;
-    for (size_t i = headerLen_; i < headerLen_ + 4; ++i) {
+
+    for (size_t i = headerLen_; i < headerLen_ + addrWidth_; ++i)
         msgAddr = (msgAddr << 8) | ev.data[i];
-    }
 
-    int msgDataLen = static_cast<int>(ev.data.size()) - headerLen_ - 4 - 2; 
-    if (msgDataLen <= 0) return;
+    int msgDataLen = static_cast<int>(ev.data.size()) - headerLen_ - addrWidth_ - 2;
 
-    log("Incoming address = ", std::hex, msgAddr, " length = ", std::dec, msgDataLen);
+    if (msgDataLen <= 0)
+        return;
 
-    log("Entering SysEx object scan");
-        for (const auto& binding : sysexIndex_) {
-            uint32_t bindAddr = 0;
-            for (uint8_t b : binding.addr) bindAddr = (bindAddr << 8) | b;
+    std::ostringstream addr;
+    addr << std::hex
+        << std::uppercase
+        << std::setw(6)
+        << std::setfill('0')
+        << msgAddr;
+
+    log("Searching for address ", addr.str(),
+        " dataLen=", msgDataLen,
+        " indexSize=", sysexIndex_.size());
+
+    auto it = std::lower_bound(
+        sysexIndex_.begin(),
+        sysexIndex_.end(),
+        msgAddr,
+        [](const sysexBinding& b, uint32_t addr) {
+            return toAddrNum(b.addr) < addr;
+        });
+
+    if (it == sysexIndex_.end()) {
+        log("lower_bound -> end (nothing indexed at or above this address)");
+    } else {
+        std::ostringstream found;
+        found << std::hex
+            << std::uppercase
+            << std::setw(6)
+            << std::setfill('0')
+            << toAddrNum(it->addr);
+
+        log("lower_bound landed on ",
+            found.str(),
+            " obj=", it->obj->id,
+            " ch=", it->channel,
+            " (not yet confirmed as an actual match - see range check below)");
+    }  
+
+        for (; it != sysexIndex_.end() && toAddrNum(it->addr) < msgAddr + msgDataLen; ++it) {
+            const auto& binding = *it;
+            uint32_t bindAddr = toAddrNum(binding.addr);
 
             const ModuleObject* obj = binding.obj;
             const int valueBytes = obj->bytes.value_or(1);
 
-            // Check if the object's address falls anywhere inside the incoming data block range
             if (bindAddr >= msgAddr && bindAddr + valueBytes <= msgAddr + msgDataLen) {
-                int offset = bindAddr - msgAddr;
-                size_t valueStart = headerLen_ + 4 + offset;
+                log("MATCHED ", obj->id, " ch=", binding.channel, " at address ", hexAddr(bindAddr));
 
-                log("[SYSEX] matched ", obj->id, " inside block at offset: ", offset);
+                int offset = bindAddr - msgAddr;
+                size_t valueStart = headerLen_ + addrWidth_ + offset;
 
                 int value = 0;
                 if (obj->encoding && *obj->encoding == "nibbles") {
@@ -544,17 +709,33 @@ void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
                 } else {
                     targetCh.rawValues[obj->id] = value;
                 }
+
+                log("MATCH ",
+                obj->id,
+                " ch=", binding.channel,
+                " value=", value);
+
+                if (obj->controlsRhythm) {
+                    if (obj->controlsRhythm)
+
+
+                    targetCh.rhythmFromSysEx = (value != 0);
+                    targetCh.rhythmFromBank = false;
+                }
             }
         }
 
-    log("Entering patch scan");
-    for (const auto& binding : patchSysexIndex_) {
-        uint32_t bindAddr = 0;
-        for (uint8_t b : binding.addr) bindAddr = (bindAddr << 8) | b;
+    // log("Entering patch scan");
+    auto patchIt = std::lower_bound(patchSysexIndex_.begin(), patchSysexIndex_.end(), msgAddr,
+        [](const patchSysexBinding& b, uint32_t addr) { return toAddrNum(b.addr) < addr; });
+
+    for (; patchIt != patchSysexIndex_.end() && toAddrNum(patchIt->addr) < msgAddr + msgDataLen; ++patchIt) {
+        const auto& binding = *patchIt;
+        uint32_t bindAddr = toAddrNum(binding.addr);
 
         if (bindAddr >= msgAddr && bindAddr < (msgAddr + msgDataLen)) {
             int offset = bindAddr - msgAddr;
-            size_t valueStart = headerLen_ + 4 + offset;
+            size_t valueStart = headerLen_ + addrWidth_ + offset;
 
             auto [chIt, inserted] = channels_.try_emplace(binding.channel);
             channelState& targetCh = chIt->second;
@@ -562,11 +743,11 @@ void stateLayer::handleSysEx(const RawEvent& ev, channelState& ch) {
 
             setPatch(targetCh, *binding.obj, binding.field, ev.data[valueStart]);
 
-            log("[PATCH SYSEX] matched ",
-                binding.obj->id,
-                " field=", (int)binding.field,
-                " ch=", binding.channel,
-                " value=", ev.data[valueStart]);
+            // log("[PATCH SYSEX] matched ",
+            //     binding.obj->id,
+            //     " field=", (int)binding.field,
+            //     " ch=", binding.channel,
+            //     " value=", ev.data[valueStart]);
         }
     }
 }
@@ -582,10 +763,10 @@ void stateLayer::storeValue(channelState& ch, const std::vector<const ModuleObje
                 patch->values[obj->id] = value;
 
 
-            log("[PER PATCH] ",
-                obj->id,
-                " = ",
-                value);
+            // log("[PER PATCH] ",
+            //     obj->id,
+            //     " = ",
+            //     value);
         }
         else
         {
@@ -596,36 +777,49 @@ void stateLayer::storeValue(channelState& ch, const std::vector<const ModuleObje
 
 
 
-void stateLayer::updtBank(channelState& ch, int ccNum, int value) {
-    for (const auto& pb : patchIndex_) {
-        if (ccNum == 0  && !pb.hasMsb) continue;
-        if (ccNum == 32 && !pb.hasLsb) continue;
+void stateLayer::updtBank(channelState& ch, int channel, int ccNum, int value)
+{
+    for (const auto& pb : patchIndex_)
+    {
+        if (ccNum == 0)
+        {
+            if (pb.hasMsb)
+                setPatch(ch, *pb.obj, patchField::Msb, value);
 
-        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, defaultPatch(*pb.obj));
+            if (pb.obj->drumBankMsb)
+            {
+                const auto& list = *pb.obj->drumBankMsb;
+                const int block = reader_.midChannels();
+                ch.rhythmFromBank = std::find(list.begin(), list.end(), value) != list.end();
+        }
 
-        if (ccNum == 0) 
-            it->second.msb = value;
-        else            
-            it->second.lsb = value;
+        if (ccNum == 32 && pb.hasLsb)
+            setPatch(ch, *pb.obj, patchField::Lsb, value);
+        }
+
+        // if (channel == 8)
+        // {
+        //     log("CH8 CC", ccNum,
+        //         " value=", value,
+        //         " rhythmFromBank=", ch.rhythmFromBank);
+        // }
     }
 }
 
 
 
-void stateLayer::updtPC(channelState& ch, int program) {
-    for (const auto& pb : patchIndex_) {
-        if (!pb.hasProgram) continue;
-
-        auto [it, inserted] = ch.patches.try_emplace(pb.obj->id, defaultPatch(*pb.obj));
-        it->second.program = program + 1;
+void stateLayer::updtPC(channelState& ch, int program)
+{
+    for (const auto& pb : patchIndex_)
+    {
+        if (pb.hasProgram)
+            setPatch(ch, *pb.obj, patchField::Program, program);
     }
 }
 
 
 
 void stateLayer::eventHandler(const RawEvent& ev) {
-    log("EVENT kind=", (int)ev.kind,
-    " size=", ev.data.size());
 
     auto [chIt, inserted] = channels_.try_emplace(ev.channel);
     channelState& ch = chIt->second;
@@ -656,7 +850,7 @@ void stateLayer::eventHandler(const RawEvent& ev) {
                 }
 
                 if (ccNum == 0 || ccNum == 32)
-                    updtBank(ch, ccNum, value);
+                    updtBank(ch, ev.channel, ccNum, value);
             }
             break;
 
@@ -667,6 +861,7 @@ void stateLayer::eventHandler(const RawEvent& ev) {
             break;
 
         case MsgKind::SysEx:
+
             handleSysEx(ev, ch);
             break;
 
@@ -720,25 +915,26 @@ std::optional<std::string> stateLayer::effLookup(const ModuleObject& obj, int va
     return it->second;
 }
 
+std::optional<std::string> stateLayer::patchLookup(bool isRhythm, const channelState::patchState& patch) const {
+    channelState::patchState lookupPatch = patch;
 
+    // GS drum kits don't use the incoming Bank MSB, force to 0
+    if (module_.id == "gs" && isRhythm)
+        lookupPatch.msb = 0;
 
-std::optional<std::string> stateLayer::patchLookup(int channel, const channelState::patchState& patch) const {
-    const std::string groupKey = (channel == 9) ? "drum_kits" : "patches";
-    auto groupIt = dictionary_.bankGroups.find(groupKey);
+    auto tryGroup = [&](const std::string& groupName, int lsbToMatch) -> std::optional<std::string> {
+    auto groupIt = dictionary_.bankGroups.find(groupName);
     if (groupIt == dictionary_.bankGroups.end())
-        return std::nullopt;
+            return std::nullopt;
 
-    auto tryMatch = [&](int lsbToMatch) -> std::optional<std::string> {
         for (const auto& bank : groupIt->second) {
-            if (bank.bank.bankMSB && *bank.bank.bankMSB != patch.msb) continue;
+            if (bank.bank.bankMSB && *bank.bank.bankMSB != lookupPatch.msb) continue;
             if (bank.bank.bankLSB && *bank.bank.bankLSB != lsbToMatch) continue;
 
             for (const auto& item : bank.items) {
-                bool programMatch = (item.program == patch.program) ||
-                                     (item.program == patch.program + 1) ||
-                                     (item.program + 1 == patch.program);
+                bool programMatch = (item.program == patch.program);
                 if (!programMatch) continue;
-                if (item.bankMSB && *item.bankMSB != patch.msb) continue;
+                if (item.bankMSB && *item.bankMSB != lookupPatch.msb) continue;
                 if (item.bankLSB && *item.bankLSB != lsbToMatch) continue;
                 return item.name;
             }
@@ -746,21 +942,36 @@ std::optional<std::string> stateLayer::patchLookup(int channel, const channelSta
         return std::nullopt;
     };
 
+    const std::string groupKey = isRhythm ? "drum_kits" : "patches";
+
     if (module_.id == "gs") {
-        // GS-only: SC-8850 > SC-88Pro > SC-88 > SC-55 fallback. lsb=0 loops back to 4.-
+        // GS-only: SC-8850 > SC-88Pro > SC-88 > SC-55 fallback. lsb=0 loops back to 4.
         static const int tiers[] = {4, 3, 2, 1};
         const int startTier = (patch.lsb == 0) ? 4 : patch.lsb;
-
         for (int tier : tiers) {
             if (tier > startTier) continue;
-            if (auto name = tryMatch(tier)) return name;
+            if (auto name = tryGroup(groupKey, tier)) return name;
         }
     } else {
-        // Every other module, lsb is a literal value
-        if (auto name = tryMatch(patch.lsb)) return name;
+        // Every other module
+        if (auto name = tryGroup(groupKey, patch.lsb)) return name;
+        if (auto name = tryGroup("patches", patch.lsb)) return name;
     }
 
-    log("Lookup failed: MSB=", patch.msb, " LSB=", patch.lsb, " PC=", patch.program);
+    // log(
+    //     "Lookup failed: rhythm=", isRhythm,
+    //     " msb=", patch.msb,
+    //     " lsb=", patch.lsb,
+    //     " program=", patch.program
+    // );
+
+
+    // log("PATCH LOOKUP FAILED",
+    // " rhythm=", isRhythm,
+    // " msb=", lookupPatch.msb,
+    // " lsb=", patch.lsb,
+    // " program=", patch.program);
+
     return std::nullopt;
 }
 
@@ -878,16 +1089,34 @@ takeSnapshot stateLayer::snapshot(int channel) const {
             snap.values[objId] = mathVal(*obj->second, raw);
         }
 
-        log(
-            "[PATCH STATE] ",
-            patchId,
-            " msb=", patch.msb,
-            " lsb=", patch.lsb,
-            " pc=", patch.program,
-            " values=", patch.values.size()
-        );
+        // log(
+        //     "[PATCH STATE] ",
+        //     patchId,
+        //     " msb=", patch.msb,
+        //     " lsb=", patch.lsb,
+        //     " pc=", patch.program,
+        //     " values=", patch.values.size()
+        // );
 
-        snap.patchNames[patchId] = patchLookup(channel, patch);
+        const bool rhythm =
+            ch->rhythmFromSysEx ||
+            ch->rhythmFromBank;
+
+        // if (channel == 8)
+        // {
+        //     log("CH8",
+        //         " bank=", ch->rhythmFromBank,
+        //         " sysex=", ch->rhythmFromSysEx,
+        //         " final=", rhythm,
+        //         " msb=", patch.msb,
+        //         " lsb=", patch.lsb,
+        //         " pc=", patch.program);
+        // }
+
+            
+
+        snap.patchNames[patchId] =
+            patchLookup(rhythm, patch);
     }
 
     if (channel == -1) {
@@ -910,13 +1139,13 @@ takeSnapshot stateLayer::snapshot(int channel) const {
         snap.lastVelo = ch->lastVelo;
     }
 
-    log("===== SNAPSHOT =====");
+    // log("===== SNAPSHOT =====");
 
-    for (const auto& [id, value] : snap.values)
-        log(id, " = ", value);
+    // for (const auto& [id, value] : snap.values)
+    //     log(id, " = ", value);
 
-    for (const auto& [id, name] : snap.patchNames)
-        log(id, " -> ", name.value_or("<none>"));
+    // for (const auto& [id, name] : snap.patchNames)
+    //     log(id, " -> ", name.value_or("<none>"));
 
     return snap;
 }
