@@ -6,12 +6,13 @@
 
 #include <array>
 #include <cstdint>
+#include <fstream>
 #include <map>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <optional>
 
 // Other stuff
 struct channelState {
@@ -40,7 +41,7 @@ struct channelState {
     int lastVelo = 0;
 };
 
-// Universal Data Bind struct
+// Data Bind struct
 struct dataBind {
     std::vector<std::optional<uint8_t>> pattern; // nullopt = [VAL]
     const ModuleObject* obj = nullptr;
@@ -53,6 +54,7 @@ struct takeSnapshot {
     int polyCount = 0;
     int lastNote = -1;
     int lastVelo = 0;
+    bool isRhythm = false;
 };
 
 // State
@@ -103,14 +105,25 @@ private:
     bool dataHandler(const RawEvent& ev, channelState& sysCh);
 
     void handleSysEx(const RawEvent& ev, channelState& ch);
-    void updtPC(channelState& ch, int program);
+
+    void updtPC(channelState& ch, int channel, int program);
     void updtBank(channelState& ch, int channel, int ccNum, int value);
     void updtNote(channelState& ch, int note, int velocity, bool on);
+
     void storeValue(channelState& ch, const std::vector<const ModuleObject*>& targets, int value);
     void initCh(channelState& ch, int channel);
     void setMFX(channelState& targetCh, int outputAssign, int mfxSelect);
-    
-    void setPatch(channelState& targetCh, const ModuleObject& obj, patchField field, int value);
+
+    uint32_t toAddrNum(const std::vector<uint8_t>& addr);
+    std::string hexAddr(uint32_t n);
+    std::vector<uint8_t> hexToBytes(const std::string& hex);
+
+    std::vector<uint8_t> getRolandPart(const std::vector<uint8_t>& baseAddr, int channel);
+    bool isRolandPart(const std::vector<uint8_t>& addr);
+
+    channelState::patchState defaultPatch(const ModuleObject& obj);
+    int initOffset(const ModuleObject& obj, int channel);
+    void setPatch(channelState& targetCh, int channel, const ModuleObject& obj, patchField field, int value);
     void applyPatch(
         channelState& targetCh,
         const patchSysexBinding& binding,

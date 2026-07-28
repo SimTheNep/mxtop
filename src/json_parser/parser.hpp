@@ -1,74 +1,46 @@
 #pragma once
 
+#include "midi_reader/midi_load.hpp"
+
+#include <cstdint>
+#include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <nlohmann/json.hpp>
-#include <optional>
-#include <cstdint>
 
 using json = nlohmann::json;
 
-
-
 // KIND DEFINITIONS
-//
-//
-
-enum class kind
-{
+enum class kind {
     Patch,
     CC,
     PitchBend,
     SysEx
 };
 
-
-
 // LAYOUTS
-// These do not pass through the state layer, they go straight to the UI
-//
-//
-
-struct layoutSect
-{
+struct layoutSect {
     std::vector<std::string> items;
 };
 
-
-
-struct layoutType
-{
-    std::unordered_map<std::string, layoutSect> views;   // Stuff that shows in the channel view
-    std::unordered_map<std::string, layoutSect> widgets; // Everything else
+struct layoutType {
+    std::unordered_map<std::string, layoutSect> views;   // Channel view items
+    std::unordered_map<std::string, layoutSect> widgets; // Widget view items
 };
 
-
-
-struct layoutDef
-{
+struct layoutDef {
     std::unordered_map<std::string, layoutType> variants;
 };
-
-
 
 layoutDef parseLayouts(const nlohmann::json& j);
 void debugLayouts(const layoutDef& layouts);
 
-
-
 // MODULES
-//
-//
-//
-
-struct display // This dictates the 0-127 offset
-{
+struct display {
     int offset = 0;
     std::string transform;
 };
-
-
 
 struct patchSysexPart { // One address-set per Part (A, B, ...)
     int channel = 0;
@@ -77,17 +49,12 @@ struct patchSysexPart { // One address-set per Part (A, B, ...)
     std::optional<std::string> program;
 };
 
-
-
 struct sysexPart { // Required for per-part SysEx
     int channel = 0;
     std::string address;
 };
 
-
-
-struct ModuleObject
-{
+struct ModuleObject {
     std::string id;
 
     kind type;
@@ -95,6 +62,9 @@ struct ModuleObject
 
     bool perPatch = false;
     bool controlsRhythm = false;
+
+    // Rhythm channel
+    std::optional<int> rhythmChannel;
 
     // Drum bank MSB
     std::optional<std::vector<int>> drumBankMsb;
@@ -120,10 +90,10 @@ struct ModuleObject
     // Generic SysEx
     std::optional<std::string> data;
 
-    // Dictionary lookup (where SysEx addresses go pick their data)
+    // Dictionary lookup
     std::optional<std::string> lookup;
 
-    // For tuning in Hz, nibbles encoding in this case
+    // Nibbles encoding / byte count
     std::optional<int> bytes;
     std::optional<std::string> encoding; 
 
@@ -135,12 +105,17 @@ struct ModuleObject
 
     // Default value override
     std::optional<int> defaultValue;
+
+    // Default per-part values
+    std::unordered_map<int, int> partDefaults;
 };
 
+struct detectDef {
+    std::string kind;
+    std::vector<std::string> patterns;
+};
 
-
-struct moduleDef // What actually defines what module it is
-{
+struct moduleDef {
     std::string id;
     std::string name;
 
@@ -155,46 +130,30 @@ struct moduleDef // What actually defines what module it is
     std::string packet;
 
     std::vector<ModuleObject> objects;
+    std::optional<detectDef> detect;
+    std::optional<MidiMode> mode;
 };
-
-
 
 moduleDef parseModule(const json& j);
 void debugModule(const moduleDef& module);
 
-
-
 // DICTIONARY
-//
-//
-
-struct enumValue // Effect value + name + short name
-{
+struct enumValue {
     int id = 0;
     std::string name;
-
     std::optional<std::string> shortName;
 };
 
-
-
-struct enumDef // Effect definition
-{
+struct enumDef {
     std::vector<enumValue> values;
 };
 
-
-
-struct bankSelec // Bank selector
-{
+struct bankSelec {
     std::optional<int> bankMSB;
     std::optional<int> bankLSB;
 };
 
-
-
-struct patchSelec // Patch selector
-{
+struct patchSelec {
     int program = 0;
 
     std::optional<int> bankMSB;
@@ -203,8 +162,6 @@ struct patchSelec // Patch selector
     std::string name;
 };
 
-
-
 struct patchBank {
     std::string id;
     std::string name;
@@ -212,14 +169,11 @@ struct patchBank {
     std::vector<patchSelec> items;
 };
 
-
-
-struct dictionaryDef { // Full dictionary
+struct dictionaryDef {
     std::unordered_map<std::string, enumDef> enums;
     std::unordered_map<std::string, std::vector<patchBank>> bankGroups;
+    std::unordered_map<std::string, std::unordered_map<std::string, bool>> efxFlags;
 };
-
-
 
 dictionaryDef parseDictionary(const json& j);
 void debugDictionary(const dictionaryDef& dictionary);

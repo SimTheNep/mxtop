@@ -3,25 +3,25 @@
 #include "types.hpp"
 
 #include <deque>
-#include <mutex> // This stuff is the holy grail of this btw, wouldn't be possible without
+#include <mutex>
 #include <optional>
 #include <string>
 #include <vector>
 
-enum class MidiMode { // This is goated
+enum class MidiMode {
     Native,
     GM2,
     GS,
     XG
 };
 
-// THE MAGIC SAUCE OF READING MIDI
-//
-// This turns the MIDIs into a single stream of RawEvents, with their assigned port noted.
-// That's what lets the files output to the ports after parsing in perfect sync (See dataInit() in the debug_ui.cpp)
-//
-//
+// SysEx detection rule loaded from module definitions
+struct DetectRule {
+    std::string moduleFolder;
+    std::string data;
+};
 
+// Turns MIDI files into a synchronized RawEvent stream.
 struct MidiReader {
 
     MidiReader() = default;
@@ -30,34 +30,65 @@ struct MidiReader {
     void dataInit(
         const std::vector<std::string>& filenames,
         size_t outputCount = 1,
-        int midChannels = 16 // Offsets the channels (see types.hpp)
+        int midChannels = 16
     );
 
+    // Returns detected module folder path after loading
+    std::optional<std::string> detectedModuleFolder() const {
+        return detectedModuleFolder_;
+    }
 
-    bool forceFront(RawEvent& out); // Pops the next queued event into output
-    bool hasMoreEvents() const; // True if there's at least one event left in the queue.
-    bool backlog( double elapsedMs, std::vector<RawEvent>& out ); //  If an events timestamp is <= elapsedMs it gets output, simple enough
+    bool forceFront(RawEvent& out);
+    bool hasMoreEvents() const;
+    bool backlog(
+        double elapsedMs,
+        std::vector<RawEvent>& out
+    );
 
-    // Pushes one already-parsed event onto the back of the queue (capped, see push() in midi_load.cpp)
-    // Public for scalability, maybe live input from a synth or keyboard... if you care about this, lmk.
+    // Allows external/live MIDI injection
     void push(RawEvent&& ev);
 
-    // Clears the queue, automatically called
+    // Clears queue
     void close();
 
-    size_t sourceCount() const { return sourceCount_; }
-    int midChannels() const { return midChannels_; }
+    size_t sourceCount() const {
+        return sourceCount_;
+    }
 
-private: // Private because this stuff can mess up the queue so be careful
+    int midChannels() const {
+        return midChannels_;
+    }
 
-    // Same as push(), but it's uncapped ...
+    // Add detection rule from parsed module.json
+    void addDetectionRule(
+        const DetectRule& rule
+    );
+
+private:
+    // Queue handling
     void pushNoCap(RawEvent&& ev);
 
+    // SysEx detection
+    bool sysexMatches(
+        const std::vector<unsigned char>& midi,
+        const std::string& pattern
+    );
+
+    std::optional<std::string> detectSysEx(
+        const RawEvent& ev
+    );
+
+    // Detected module folder path
+    std::optional<std::string> detectedModuleFolder_;
+
+    // Loaded JSON detection rules
+    std::vector<DetectRule> detectRules_;
+
+    // Event queue
     std::deque<RawEvent> queue_;
+
     mutable std::mutex queueMutex_;
 
     size_t sourceCount_ = 0;
     int midChannels_ = 16;
-
-    std::optional<MidiMode> midiStdSwitch(const RawEvent& ev);
 };

@@ -10,27 +10,38 @@ CRAIGAPP_SRCS := $(wildcard midi_reader/craigsapp/*.cpp)
 CRAIGAPP_OBJS := $(CRAIGAPP_SRCS:.cpp=.o)
 
 COMMON_SRCS := \
-	json_parser/parser.cpp \
-	state_layer/state.cpp \
-	midi_reader/midi_load.cpp \
-	$(CRAIGAPP_SRCS)
+    json_parser/parser_layouts.cpp \
+    json_parser/parser_module.cpp \
+    json_parser/parser_dictionary.cpp \
+    json_parser/parser_debug.cpp \
+    state_layer/state_const.cpp \
+    state_layer/state_query.cpp \
+    state_layer/state_sysex.cpp \
+    state_layer/state_main.cpp \
+    state_layer/state_events.cpp \
+    midi_reader/queue.cpp \
+    midi_reader/midi_load.cpp \
+    $(CRAIGAPP_SRCS)
 
 COMMON_OBJS := $(COMMON_SRCS:.cpp=.o)
 
 MAIN_SRCS := \
-	main.cpp \
-	tui/debug/debug_ui.cpp
+    main.cpp \
+    tui/debug/debug_ui.cpp
 
 MAIN_OBJS := $(MAIN_SRCS:.cpp=.o)
 
 STATE_SRCS := \
-	state_layer/state_test.cpp
+    state_layer/state_test.cpp
 
 STATE_OBJS := $(STATE_SRCS:.cpp=.o)
 
 JSON_SRCS := \
-	json_parser/scratch.cpp \
-	json_parser/parser.cpp
+    json_parser/scratch.cpp \
+    json_parser/parser_layouts.cpp \
+    json_parser/parser_module.cpp \
+    json_parser/parser_dictionary.cpp \
+    json_parser/parser_debug.cpp
 
 JSON_OBJS := $(JSON_SRCS:.cpp=.o)
 
@@ -40,10 +51,10 @@ STATE_TARGET := state_layer/statetest
 JSON_TARGET := json_parser/jsontest
 
 ALL_TARGETS := \
-	$(MAIN_TARGET) \
-	$(MIDI_TARGET) \
-	$(STATE_TARGET) \
-	$(JSON_TARGET)
+    $(MAIN_TARGET) \
+    $(MIDI_TARGET) \
+    $(STATE_TARGET) \
+    $(JSON_TARGET)
 
 all: $(ALL_TARGETS) cleanup-objects
 

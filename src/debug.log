@@ -1,0 +1,11 @@
+[midi_load] track 0 -> port -1
+[midi_load] track 1 -> port 0
+[midi_load] track 2 -> port 0
+[midi_load] track 3 -> port 0
+[midi_load] track 4 -> port 0
+[midi_load] track 5 -> port 0
+[midi_load] track 6 -> port 0
+[midi_load] track 7 -> port 0
+[midi_load] track 8 -> port 0
+[midi_load] track 9 -> port 0
+[main] auto-selected module: ../modules/gm2

@@ -3,6 +3,7 @@
 #include "tui/debug/debug_ui.hpp"
 #include "json_parser/parser.hpp"
 #include "state_layer/state.hpp"
+#include "log.hpp"
 
 #include <CLI/CLI.hpp>
 #include <RtMidi.h>
@@ -100,30 +101,6 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // DEBUG MODE CHOICE
-    bool useStateLayer = false;
-    moduleDef module;
-    dictionaryDef dictionary;
-
-    if (debug) {
-        useStateLayer = statePrompt();
-
-        if (useStateLayer) {
-            if (moduleFolder.empty()) {
-                std::fprintf(stderr, "state layer debug view needs --module <folder>\n");
-                return 1;
-            }
-
-            try {
-                module = parseModule(loadJsonFile(moduleFolder + "/module.json"));
-                dictionary = parseDictionary(loadJsonFile(moduleFolder + "/dictionary.json"));
-            } catch (const std::exception& e) {
-                std::fprintf(stderr, "failed to load module folder \"%s\": %s\n", moduleFolder.c_str(), e.what());
-                return 1;
-            }
-        }
-    }
-
     // MIDI port opening
     for (size_t i = 0; i < ports.size(); ++i) {
 
@@ -153,14 +130,73 @@ int main(int argc, char** argv) {
         outs.push_back(std::move(out));
     }
 
+    // DEBUG MODE CHOICE
+    bool useStateLayer = false;
+    moduleDef module;
+    dictionaryDef dictionary;
+
     // MIDI reader invoc
     MidiReader reader;
+
+    // Register module paths to scan
+    std::vector<std::string> knownModulePaths = {
+        "../modules/gs",
+        "../modules/xg",
+        "../modules/sd-90",
+        "../modules/gm2"
+    };
+
+    // Automatically load detection rules directly mapped to their module directory path
+    for (const auto& path : knownModulePaths) {
+        try {
+            auto j = loadJsonFile(path + "/module.json");
+            auto mod = parseModule(j);
+
+            if (mod.detect && mod.detect->kind == "sysex") {
+                for (const auto& pattern : mod.detect->patterns) {
+                    reader.addDetectionRule({ path, pattern });
+                }
+            }
+        } catch (...) {
+            // Silently skip unreadable paths
+        }
+    }
+
+    reader.dataInit(inptFiles, outs.size());
+
+    if (debug) {
+        useStateLayer = statePrompt();
+
+        if (useStateLayer) {
+            if (moduleFolder.empty()) {
+                auto folder = reader.detectedModuleFolder();
+
+                if (folder) {
+                    moduleFolder = *folder;
+                    logDbg("[main] auto-selected module: " + moduleFolder);
+                } else {
+                    moduleFolder = "../modules/gm2"; 
+                    logDbg("[main] auto-selected module: " + moduleFolder);
+                }
+            }
+
+            try {
+                module = parseModule(loadJsonFile(moduleFolder + "/module.json"));
+                dictionary = parseDictionary(loadJsonFile(moduleFolder + "/dictionary.json"));
+            }
+            catch (const std::exception& e) {
+                std::fprintf(stderr,
+                    "failed to load module \"%s\": %s\n",
+                    moduleFolder.c_str(),
+                    e.what());
+                return 1;
+            }
+        }
+    }
 
     if (debug) {
         std::printf("Loading %zu file(s)...\n", inptFiles.size());
     }
-    
-    reader.dataInit(inptFiles, outs.size());
 
     // Only built in state mode (translates messages to module/dictionary json data)
     std::unique_ptr<stateLayer> state;
@@ -196,11 +232,11 @@ int main(int argc, char** argv) {
 
                 // Route data to output ports regardless of debug flag
                 if (!ev.data.empty()) {
-                for (int port : ev.sourcePorts) {
-                    if (port >= 0 && static_cast<size_t>(port) < outs.size()) {
-                        outs[port]->sendMessage(&ev.data);
+                    for (int port : ev.sourcePorts) {
+                        if (port >= 0 && static_cast<size_t>(port) < outs.size()) {
+                            outs[port]->sendMessage(&ev.data);
+                        }
                     }
-                }
                 }
 
                 if (useStateLayer) {
