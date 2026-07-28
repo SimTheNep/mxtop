@@ -7,12 +7,14 @@
         "id": "patch",
         "kind": "patch",
         "sequence": ["cc0", "pc"],
-        "fields": { "msb": 121, "program": 0 }
+        "fields": { "msb": 121, "program": 0 },
+        "rhythm_channel": 10,
+        "drum_msb": [120]
     },
 
     { "id": "volume",                "kind": "cc", "cc": 7 },
     { "id": "pan",                   "kind": "cc", "cc": 10, "display": { "offset": -64, "transform": "pan_lcr"} },
-    { "id": "pitch",                 "kind": "pitchbend", "display": { "offset": -64 } },
+    { "id": "pitch",                 "kind": "pitchbend", "display": { "offset": -64, "transform": "pitchbend" } },
     { "id": "expression",            "kind": "cc", "cc": 11 },
     { "id": "modulation",            "kind": "cc", "cc": 1 },
     { "id": "sustain",               "kind": "cc", "cc": 64 },
@@ -25,8 +27,10 @@
     { "id": "decay",                 "kind": "cc", "cc": 75, "display": { "offset": -64 } },
     { "id": "reverb_send",           "kind": "cc", "cc": 91 },
     { "id": "chorus_send",           "kind": "cc", "cc": 93 },
-    { "id": "delay_send",            "kind": "cc", "cc": 94 },
-    { "id": "master_volume",         "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] F7" },
+
+    { "id":"master_tune", "kind":"sysex", "data":"F0 7F 7F 04 04 00 [VAL] [VAL] F7", "bytes":2, "display":{"transform":"cents"} },
+    { "id":"transpose",              "kind":"sysex", "data":"F0 7F 7F 04 05 00 [VAL] F7", "display":{"offset":-64} },
+    { "id": "master_volume",         "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] [VAL] F7", "default": 127 },
     { "id": "reset_all_controllers", "kind": "cc", "cc": 121 }
 
     

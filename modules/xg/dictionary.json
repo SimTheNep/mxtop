@@ -1,4 +1,89 @@
 {
+    "part_mode": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "Instrument", "short": "INST"},
+            {"id": 1, "name": "Rhythm", "short": "DRUM"}
+        ]
+    },
+
+    "reverb_types": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "No Effect", "short": "Off"},
+            {"id": 1, "name": "Hall 1", "short": "Hall1"},
+            {"id": 2, "name": "Hall 2", "short": "Hall2"},
+            {"id": 3, "name": "Room 1", "short": "Room1"},
+            {"id": 4, "name": "Room 2", "short": "Room2"},
+            {"id": 5, "name": "Room 3", "short": "Room3"},
+            {"id": 6, "name": "Stage 1", "short": "Stage1"},
+            {"id": 7, "name": "Stage 2", "short": "Stage2"},
+            {"id": 8, "name": "Plate", "short": "Plate"},
+            {"id": 9, "name": "White Room", "short": "WhiteRm"},
+            {"id": 10, "name": "Tunnel", "short": "Tunnel"},
+            {"id": 11, "name": "Cathedral", "short": "Cath"},
+            {"id": 12, "name": "Reverse Gate", "short": "RevGate"}
+        ]
+    },
+
+    "chorus_types": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "No Effect", "short": "Off"},
+            {"id": 1, "name": "Chorus 1", "short": "Cho1"},
+            {"id": 2, "name": "Chorus 2", "short": "Cho2"},
+            {"id": 3, "name": "Chorus 3", "short": "Cho3"},
+            {"id": 4, "name": "Chorus 4", "short": "Cho4"},
+            {"id": 5, "name": "Celeste 1", "short": "Cel1"},
+            {"id": 6, "name": "Celeste 2", "short": "Cel2"},
+            {"id": 7, "name": "Flanger 1", "short": "Flg1"},
+            {"id": 8, "name": "Flanger 2", "short": "Flg2"},
+            {"id": 9, "name": "Flanger 3", "short": "Flg3"},
+            {"id": 10, "name": "Symphonic", "short": "Symph"},
+            {"id": 11, "name": "Rotary Speaker", "short": "Rotary"},
+            {"id": 12, "name": "Tremolo", "short": "Trem"},
+            {"id": 13, "name": "Auto Pan", "short": "AutoPan"}
+        ]
+    },
+
+    "variation_types": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "No Effect", "short": "Off"},
+            {"id": 1, "name": "Hall 1", "short": "Hall1"},
+            {"id": 2, "name": "Hall 2", "short": "Hall2"},
+            {"id": 3, "name": "Room 1", "short": "Room1"},
+            {"id": 4, "name": "Room 2", "short": "Room2"},
+            {"id": 5, "name": "Room 3", "short": "Room3"},
+            {"id": 6, "name": "Stage 1", "short": "Stage1"},
+            {"id": 7, "name": "Stage 2", "short": "Stage2"},
+            {"id": 8, "name": "Plate", "short": "Plate"},
+            {"id": 9, "name": "Delay LCR", "short": "DlyLCR"},
+            {"id": 10, "name": "Delay L/R", "short": "DlyLR"},
+            {"id": 11, "name": "Echo", "short": "Echo"},
+            {"id": 12, "name": "Cross Delay", "short": "XDelay"},
+            {"id": 13, "name": "Distortion", "short": "Dist"},
+            {"id": 14, "name": "Overdrive", "short": "OD"},
+            {"id": 15, "name": "Amp Simulator", "short": "AmpSim"},
+            {"id": 16, "name": "3-Band EQ", "short": "3BEQ"},
+            {"id": 17, "name": "2-Band EQ", "short": "2BEQ"},
+            {"id": 18, "name": "Auto Wah", "short": "AutoWah"},
+            {"id": 19, "name": "Rotary Speaker", "short": "Rotary"},
+            {"id": 20, "name": "Phaser", "short": "Phsr"},
+            {"id": 21, "name": "Flanger", "short": "Flg"},
+            {"id": 22, "name": "Symphonic", "short": "Symph"},
+            {"id": 23, "name": "Tremolo", "short": "Trem"},
+            {"id": 24, "name": "Auto Pan", "short": "AutoPan"},
+            {"id": 25, "name": "Pitch Change", "short": "Pitch"},
+            {"id": 26, "name": "Chorus", "short": "Cho"},
+            {"id": 27, "name": "Vocoder", "short": "Vocoder"}
+        ]
+    },
+
     "patches": [
     {
         "id": "xg",
@@ -394,23 +479,5 @@
             {"bank_msb": 64, "program": 115, "bank_lsb": 0, "name": "Firework"}
         ]
     }
-    ],
-        "reverb_types": {
-        "type": "enum",
-        "values": [
-        {"id": 0, "name": "REVERB"}
-        ]
-    },
-    "chorus_types": {
-        "type": "enum",
-        "values": [
-        {"id": 0, "name": "CHORUS"}
-        ]
-    },
-        "delay_types": {
-        "type": "enum",
-        "values": [
-        {"id": 0, "name": "DELAY"}
-        ]
-    }
+    ]
 }

@@ -1,4 +1,13 @@
 {
+    "part_mode": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "Instrument", "short": "INST"},
+            {"id": 1, "name": "Rhythm", "short": "DRUM"}
+        ]
+    },
+
     "output_assign": {
         "type":"enum",
 
@@ -1392,13 +1401,13 @@
             "id": "rcont",
             "name": "R CONT",
             "drum_kits": [
-                { "program": 0, "name": "St.Standard" },
-                { "program": 8, "name": "St.Room" },
-                { "program": 16, "name": "St.Power" },
-                { "program": 24, "name": "Rust Set" },
-                { "program": 25, "name": "Analog2 Set" },
-                { "program": 32, "name": "St.Jazz" },
-                { "program": 40, "name": "St.Brush" },
+                { "program": 0, "name": "StandardSet2" },
+                { "program": 8, "name": "Room Set 2" },
+                { "program": 16, "name": "Power Set 2" },
+                { "program": 24, "name": "Dance Set" },
+                { "program": 25, "name": "Rave Set" },
+                { "program": 32, "name": "Jazz Set 2" },
+                { "program": 40, "name": "Brush Set 2" },
                 { "program": 48, "name": "OrchestraSet" },
                 { "program": 56, "name": "SFX Set" }
             ],
@@ -1559,7 +1568,9 @@
             {"id": "87", "name": "Isolator 2", "short_name": "Isoltr2"},
             {"id": "88", "name": "Stereo Spectrum", "short_name": "StSpect"},
             {"id": "89", "name": "3D Auto Spin", "short_name": "3DAtSpin"},
-            {"id": "90", "name": "3D Manual", "short_name": "3DMan"}
+            {"id": "90", "name": "3D Manual", "short_name": "3DMan"},
+
+            {"id": "91", "name": "PATCH"}
         ]
     },
     "afx_types": {

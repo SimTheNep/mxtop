@@ -2,31 +2,28 @@
   "full": {
     "views": {
       "channels": [
-        "patch", "volume", "pan", "pitch", "modulation", "cutoff", "resonance", 
-        "attack", "decay", "release", "chorus_send", "reverb_send", "variation_send", 
-        "sustain", "vibrato_depth", "vibrato_rate", 
+        "patch", "volume", "pan", "pitch", "part_tune", "cutoff", "resonance",
+        "attack", "decay", "release", "chorus_send", "reverb_send",
+        "variation_send", "part_mode", "vibrato_depth", "vibrato_rate",
         "vibrato_delay", "portamento_switch", "portamento_time"
       ],
       "system_fx": [
-        "reverb", "chorus", "variation"
+        "xg_reverb_type",
+        "xg_chorus_type",
+        "xg_variation_type"
       ],
       "master_output": [
-        "master_volume", "system_reset"
+        "master_tune", "transpose", "master_volume", "system_on"
       ]
-    },
-    "widgets": {
-      "stream_telemetry": ["midi_bandwidth", "polyphony_heatmap"],
-      "harmonic_engine": ["chord_detector", "pitch_wheel_monitor"],
-      "bottom_panels": ["event_log", "activity_histogram"]
     }
   },
   "compact": {
     "views": {
       "channels": [
-        "patch", "volume", "pan", "pitch", "modulation", "cutoff", "resonance", 
-        "attack", "decay", "release", "chorus_send", "reverb_send", "variation_send", 
-        "sustain", "vibrato_depth", "vibrato_rate", 
-        "vibrato_delay", "portamento_switch", "portamento_time"
+        "patch", "volume", "pan", "pitch", "cutoff", "resonance",
+        "attack", "decay", "release", "chorus_send", "reverb_send",
+        "variation_send", "part_mode", "vibrato_depth", "vibrato_rate",
+        "vibrato_delay", "portamento_switch", "part_tune"
       ]
     }
   },

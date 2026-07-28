@@ -1,6 +1,18 @@
 {
   "id": "xg",
-  "name": "XGlite",
+  "name": "Yamaha XGlite",
+  "manufacturer": 67,
+  "packet": "F0 43 [DEVICE] [MODEL] [ADDRESS] [DATA] F7",
+  "header_length": 4,
+  "address_width": 3,
+  "rhythm_channel": 10,
+  "detect": {
+    "kind": "sysex",
+    "data": [
+      "F0 43 10 4C 00 00 7E 00 F7"
+    ]
+  },
+
   "objects": [
 
     {
@@ -8,13 +20,17 @@
         "kind": "patch",
         "sequence": ["cc0", "cc32", "pc"],
         "fields": { "msb": 0, "lsb": 0, "program": 0 },
-        "bank_select": { "msb": "bank", "lsb": "variation" }
+        "sysex": {"base": "080000"},
+        "rhythm_channel": 10, 
+        "bank_select": { "msb": "bank", "lsb": "variation" },
+        "drum_msb": [127]
     },
 
     { "id": "volume",             "kind": "cc", "cc": 7 },
     { "id": "pan",                "kind": "cc", "cc": 10, "display": { "offset": -64, "transform": "pan_lcr"} },
-    { "id": "pitch",              "kind": "pitchbend", "display": { "offset": -64 } },
+    { "id": "pitch",              "kind": "pitchbend", "display": { "offset": -64, "transform": "pitchbend" } },
     { "id": "expression",         "kind": "cc", "cc": 11 },
+    
     { "id": "modulation",         "kind": "cc", "cc": 1 },
     { "id": "sustain",            "kind": "cc", "cc": 64 },
     { "id": "portamento_time",    "kind": "cc", "cc": 5 },
@@ -29,8 +45,22 @@
     { "id": "vibrato_delay",      "kind": "cc", "cc": 78, "display": { "offset": -64 } },
     { "id": "reverb_send",        "kind": "cc", "cc": 91 },
     { "id": "chorus_send",        "kind": "cc", "cc": 93 },
-    { "id": "delay_send",         "kind": "cc", "cc": 94 },
-    { "id": "master_volume",      "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] F7" },
-    { "id": "system_reset",        "kind": "sysex", "data": "F0 43 10 4C 00 00 7E 00 F7" }
+    { "id": "variation_send",         "kind": "cc", "cc": 94 },
+
+    { "id": "part_tune",          "kind": "sysex", "address": "08000D", "display": { "offset": -64} },
+    { "id": "master_tune",        "kind": "sysex","address": "000000","bytes": 2,"display": {"transform": "frequency"}},
+    { "id": "transpose",          "kind": "sysex","address": "000001","display": {"offset": -64}},
+    { "id":"reverb_type",      "kind":"sysex", "data":"F0 43 10 4C 02 01 00 [VAL] F7", "lookup":"reverb_types", "default": 1 },
+    { "id":"chorus_type",      "kind":"sysex", "data":"F0 43 10 4C 02 02 00 [VAL] F7", "lookup":"chorus_types", "default": 1  },
+    { "id":"variation_type",   "kind":"sysex", "data":"F0 43 10 4C 02 03 00 [VAL] F7", "lookup":"variation_types", "default": 9 },
+    { "id": "master_volume",      "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] [VAL] F7" },
+    
+    {
+      "id": "rhythm_part",
+      "kind": "sysex",
+      "controls_rhythm": true,
+      "address": "401004",
+      "lookup": "part_mode"
+    }
   ]
 }

@@ -2,7 +2,7 @@
   "full": {
     "views": {
       "channels": [
-        "patch", "volume", "pan", "pitch", "tune", "cutoff", "resonance", 
+        "patch", "volume", "pan", "pitch", "part_tune", "cutoff", "resonance", 
         "attack", "decay", "release", "chorus_send", "reverb_send", 
         "output_assign", "mfx", "vibrato_depth", "vibrato_rate", 
         "vibrato_delay", "portamento_switch", "portamento_time"

@@ -1,4 +1,157 @@
 {
+
+    "efx_capabilities": {
+        "sc55": false,
+        "sc88": false,
+        "sc88pro": true,
+        "sc8850": true
+    },
+
+    "part_mode": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "Instrument", "short": "INST"},
+            {"id": 1, "name": "Rhythm 1", "short": "RHY1"},
+            {"id": 2, "name": "Rhythm 2", "short": "RHY2"}
+        ]
+    },
+
+    "efx_routing": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "OFF", "short": "Off"},
+            {"id": 1, "name": "EFX", "short": "EFX"},
+            {"id": 2, "name": "EFX", "short": "EFX"}
+        ]
+    },
+
+    "efx_types": {
+        "type": "enum",
+
+        "values": [
+            {"id":"0","name":"THROUGH","short_name":"THRU"},
+            {"id":"1","name":"Stereo EQ","short_name":"StEQ"},
+            {"id":"2","name":"Spectrum","short_name":"Spect"},
+            {"id":"3","name":"Enhancer","short_name":"Enh"},
+            {"id":"4","name":"Humanizer","short_name":"Human"},
+            {"id":"5","name":"Overdrive","short_name":"OD"},
+            {"id":"6","name":"Distortion","short_name":"Dist"},
+            {"id":"7","name":"Phaser","short_name":"Phsr"},
+            {"id":"8","name":"Auto Wah","short_name":"AutoWah"},
+            {"id":"9","name":"Rotary","short_name":"Rotary"},
+            {"id":"10","name":"Stereo Flanger","short_name":"StFlng"},
+            {"id":"11","name":"Step Flanger","short_name":"StepFlng"},
+            {"id":"12","name":"Tremolo","short_name":"Trem"},
+            {"id":"13","name":"Auto Pan","short_name":"AutoPan"},
+            {"id":"14","name":"Compressor","short_name":"Comp"},
+            {"id":"15","name":"Limiter","short_name":"Limit"},
+            {"id":"16","name":"Hexa Chorus","short_name":"HexChor"},
+            {"id":"17","name":"Tremolo Chorus","short_name":"TremChor"},
+            {"id":"18","name":"Stereo Chorus","short_name":"StChor"},
+            {"id":"19","name":"Space D","short_name":"SpaceD"},
+            {"id":"20","name":"3D Chorus","short_name":"3DChor"},
+            {"id":"21","name":"Stereo Delay","short_name":"StDly"},
+            {"id":"22","name":"Mod Delay","short_name":"ModDly"},
+            {"id":"23","name":"3 Tap Delay","short_name":"3TapDly"},
+            {"id":"24","name":"4 Tap Delay","short_name":"4TapDly"},
+            {"id":"25","name":"Time Control Delay","short_name":"TmCtrlDly"},
+            {"id":"26","name":"Reverb","short_name":"Rev"},
+            {"id":"27","name":"Gated Reverb","short_name":"GatedRev"},
+            {"id":"28","name":"3D Delay","short_name":"3DDly"},
+            {"id":"29","name":"2 Pitch Shifter","short_name":"2Pitch"},
+            {"id":"30","name":"Feedback Pitch Shifter","short_name":"FBPitch"},
+            {"id":"31","name":"3D Auto Wah","short_name":"3DAutoWah"},
+            {"id":"32","name":"3D Manual","short_name":"3DManual"},
+
+            {"id":"33","name":"Lo-Fi 1","short_name":"LoFi1"},
+            {"id":"34","name":"Lo-Fi 2","short_name":"LoFi2"},
+
+            {"id":"35","name":"Overdrive -> Chorus","short_name":"OD->Cho"},
+            {"id":"36","name":"Overdrive -> Flanger","short_name":"OD->Flng"},
+            {"id":"37","name":"Overdrive -> Delay","short_name":"OD->Dly"},
+
+            {"id":"38","name":"Distortion -> Chorus","short_name":"Dist->Cho"},
+            {"id":"39","name":"Distortion -> Flanger","short_name":"Dist->Flng"},
+            {"id":"40","name":"Distortion -> Delay","short_name":"Dist->Dly"},
+
+            {"id":"41","name":"Enhancer -> Chorus","short_name":"Enh->Cho"},
+            {"id":"42","name":"Enhancer -> Flanger","short_name":"Enh->Flng"},
+            {"id":"43","name":"Enhancer -> Delay","short_name":"Enh->Dly"},
+
+            {"id":"44","name":"Chorus -> Delay","short_name":"Cho->Dly"},
+            {"id":"45","name":"Flanger -> Delay","short_name":"Flng->Dly"},
+            {"id":"46","name":"Chorus -> Flanger","short_name":"Cho->Flng"},
+
+            {"id":"47","name":"Rotary Multi","short_name":"RotMlt"},
+            {"id":"48","name":"Guitar Multi 1","short_name":"GtMlt1"},
+            {"id":"49","name":"Guitar Multi 2","short_name":"GtMlt2"},
+            {"id":"50","name":"Guitar Multi 3","short_name":"GtMlt3"},
+            {"id":"51","name":"Clean Guitar Multi 1","short_name":"ClGtMlt1"},
+            {"id":"52","name":"Clean Guitar Multi 2","short_name":"ClGtMlt2"},
+            {"id":"53","name":"Bass Multi","short_name":"BassMlt"},
+            {"id":"54","name":"Rhodes Multi","short_name":"RhodesMlt"},
+            {"id":"55","name":"Keyboard Multi","short_name":"KbdMlt"},
+
+            {"id":"56","name":"Chorus/Delay","short_name":"Cho/Dly"},
+            {"id":"57","name":"Flanger/Delay","short_name":"Flng/Dly"},
+            {"id":"58","name":"Chorus/Flanger","short_name":"Cho/Flng"},
+
+            {"id":"59","name":"Overdrive 1/Overdrive 2","short_name":"OD1/OD2"},
+            {"id":"60","name":"Overdrive/Rotary","short_name":"OD/Rot"},
+            {"id":"61","name":"Overdrive/Phaser","short_name":"OD/Phsr"},
+            {"id":"62","name":"Overdrive/Auto Wah","short_name":"OD/Wah"},
+            {"id":"63","name":"Phaser/Rotary","short_name":"Phsr/Rot"},
+            {"id":"64","name":"Phaser/Auto Wah","short_name":"Phsr/Wah"}
+        ]
+        },
+
+    "reverb_types": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "Room 1", "short": "Room1"},
+            {"id": 1, "name": "Room 2", "short": "Room2"},
+            {"id": 2, "name": "Room 3", "short": "Room3"},
+            {"id": 3, "name": "Hall 1", "short": "Hall1"},
+            {"id": 4, "name": "Hall 2", "short": "Hall2"},
+            {"id": 5, "name": "Plate", "short": "Plate"},
+            {"id": 6, "name": "Delay", "short": "Dly"},
+            {"id": 7, "name": "Panning Delay", "short": "PanDly"}
+        ]
+    },
+
+    "chorus_types": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "Chorus 1", "short": "Cho1"},
+            {"id": 1, "name": "Chorus 2", "short": "Cho2"},
+            {"id": 2, "name": "Chorus 3", "short": "Cho3"},
+            {"id": 3, "name": "Chorus 4", "short": "Cho4"},
+            {"id": 4, "name": "Feedback Chorus", "short": "FBCho"},
+            {"id": 5, "name": "Flanger", "short": "Flng"},
+            {"id": 6, "name": "Short Delay", "short": "ShtDly"},
+            {"id": 7, "name": "Short Delay Feedback", "short": "ShtFB"}
+        ]
+    },
+
+    "delay_types": {
+        "type": "enum",
+
+        "values": [
+            {"id": 0, "name": "Delay 1", "short": "Dly1"},
+            {"id": 1, "name": "Delay 2", "short": "Dly2"},
+            {"id": 2, "name": "Delay 3", "short": "Dly3"},
+            {"id": 3, "name": "Delay 4", "short": "Dly4"},
+            {"id": 4, "name": "Pan Delay 1", "short": "PanD1"},
+            {"id": 5, "name": "Pan Delay 2", "short": "PanD2"},
+            {"id": 6, "name": "Pan Delay 3", "short": "PanD3"},
+            {"id": 7, "name": "Pan Delay 4", "short": "PanD4"}
+        ]
+    },
+
     "patches": [
     {
         "id": "gs",
@@ -1313,23 +1466,5 @@
             {"bank_msb": 0, "program": 127, "bank_lsb": 4, "name": "CM-64/32L"}
         ]
         }
-    ],
-    "reverb_types": {
-        "type": "enum",
-        "values": [
-        {"id": 0, "name": "REVERB"}
-        ]
-    },
-    "chorus_types": {
-        "type": "enum",
-        "values": [
-        {"id": 0, "name": "CHORUS"}
-        ]
-    },
-    "delay_types": {
-        "type": "enum",
-        "values": [
-        {"id": 0, "name": "DELAY"}
-        ]
-    }
+    ]
 }

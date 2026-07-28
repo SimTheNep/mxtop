@@ -140,14 +140,14 @@
       "id": "gm_drums",
       "name": "GM R",
       "drum_kits": [
-        { "program": 0, "name": "Standard" },
-        { "program": 8, "name": "Room" },
-        { "program": 16, "name": "Power" },
-        { "program": 24, "name": "Electronic" },
-        { "program": 25, "name": "Analog" },
-        { "program": 32, "name": "Jazz" },
-        { "program": 40, "name": "Brush" },
-        { "program": 48, "name": "Orchestral" },
+        { "program": 0, "name": "STANDARD" },
+        { "program": 8, "name": "ROOM" },
+        { "program": 16, "name": "POWER" },
+        { "program": 24, "name": "ELECTRONIC" },
+        { "program": 25, "name": "ANALOG" },
+        { "program": 32, "name": "JAZZ" },
+        { "program": 40, "name": "BRUSH" },
+        { "program": 48, "name": "ORCHESTRAL" },
         { "program": 56, "name": "SFX" }
       ]
     }

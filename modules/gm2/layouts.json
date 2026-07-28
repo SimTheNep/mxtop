@@ -2,16 +2,15 @@
   "full": {
     "views": {
       "channels": [
-        "patch", "volume", "pan", "pitch", "part_tune", "cutoff", "resonance",
+        "patch", "volume", "pan", "pitch", "cutoff", "resonance",
         "attack", "decay", "release", "chorus_send", "reverb_send",
-        "efx_part_assign", "efx", "vibrato_depth", "vibrato_rate",
-        "vibrato_delay", "portamento_switch", "portamento_time"
+        "expression", "modulation", "sustain",
+        "portamento_switch", "portamento_time",
+        "reset_all_controllers"
       ],
-      "system_fx": [
-        "reverb", "chorus", "efx"
-      ],
+      "system_fx": [],
       "master_output": [
-        "master_tune", "transpose", "master_volume", "system_on"
+        "master_tune", "master_volume", "transpose"
       ]
     }
   },
@@ -20,8 +19,8 @@
       "channels": [
         "patch", "volume", "pan", "pitch", "cutoff", "resonance",
         "attack", "decay", "release", "chorus_send", "reverb_send",
-        "efx_part_assign", "efx", "vibrato_depth", "vibrato_rate",
-        "vibrato_delay", "portamento_switch", "part_tune"
+        "expression", "modulation", "sustain",
+        "portamento_switch", "master_tune"
       ]
     }
   },

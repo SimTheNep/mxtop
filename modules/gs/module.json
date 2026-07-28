@@ -1,19 +1,34 @@
 {
   "id": "gs",
-  "name": "General Standard",
-  "objects": [
+  "name": "Roland GS",
+  "manufacturer": 65,
+  "header_length": 5,
+  "address_width": 3,
+  "rhythm_channel": 10,
+  "checksum": "roland",
+  "packet": "F0 41 [DEVICE] [MODEL] [COMMAND] [ADDRESS] [DATA] [CHECKSUM] F7",
+  "detect": {
+    "kind": "sysex",
+    "data": [
+      "F0 41 10 42 12 40 00 7F 00 41 F7",
+      "F0 41 10 42 12 00 00 7F 00 01 F7"
+    ]
+  },
 
+  "objects": [
     {
         "id": "patch",
         "kind": "patch",
         "sequence": ["cc0", "cc32", "pc"],
         "fields": { "msb": 0, "lsb": 0, "program": 0 },
+        "sysex": {"base": "401000"},
+        "rhythm_channel": 10,
         "bank_select": { "msb": "variation", "lsb": "bank" }
     },
 
     { "id": "volume",             "kind": "cc", "cc": 7 },
     { "id": "pan",                "kind": "cc", "cc": 10, "display": { "offset": -64, "transform": "pan_lcr"} },
-    { "id": "pitch",              "kind": "pitchbend", "display": { "offset": -64 } },
+    { "id": "pitch",              "kind": "pitchbend", "display": { "offset": -64, "transform": "pitchbend" } },
     { "id": "expression",         "kind": "cc", "cc": 11 },
     { "id": "modulation",         "kind": "cc", "cc": 1 },
     { "id": "sustain",            "kind": "cc", "cc": 64 },
@@ -30,7 +45,23 @@
     { "id": "reverb_send",        "kind": "cc", "cc": 91 },
     { "id": "chorus_send",        "kind": "cc", "cc": 93 },
     { "id": "delay_send",         "kind": "cc", "cc": 94 },
-    { "id": "master_volume",      "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] F7" },
-    { "id": "system_reset",       "kind": "sysex", "data": "F0 41 10 42 12 40 00 7F 00 41 F7" }
+
+    { "id":"master_tune",         "kind":"sysex", "address":"00000000", "bytes":4, "encoding":"nibbles", "display":{"transform":"frequency"} },
+    { "id":"transpose",           "kind":"sysex", "address":"00000004", "display":{"offset":-24} },
+    { "id":"part_tune",           "kind":"sysex", "address":"401004", "display":{"offset":-64} },
+    { "id":"efx", "kind":"sysex", "address":"400020", "lookup":"efx_types" },
+    { "id":"efx_routing", "kind":"sysex", "address":"40101F", "lookup":"efx_part_assign" },
+    { "id":"reverb", "kind":"sysex", "address":"400130", "lookup":"reverb_types", "default": 4 },
+    { "id":"chorus", "kind":"sysex", "address":"400138", "lookup":"chorus_types", "default": 1 },
+    { "id":"delay", "kind":"sysex", "address":"400140", "lookup":"delay_types", "default": 1 },
+    { "id": "master_volume",      "kind": "sysex", "data": "F0 7F 7F 04 01 00 [VAL] [VAL] F7", "default": 127 },
+
+    {
+      "id": "rhythm_part",
+      "kind": "sysex",
+      "controls_rhythm": true,
+      "address": "401015",
+      "lookup": "part_mode"
+    }
   ]
 }
