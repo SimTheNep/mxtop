@@ -20,16 +20,41 @@ enum class kind {
 };
 
 // LAYOUTS
+
+struct layoutColumn {
+    std::vector<std::string> fields;
+    std::string label;
+    std::string join = " / ";
+
+    int width = 0;
+};
+
 struct layoutSect {
-    std::vector<std::string> items;
+    std::vector<layoutColumn> columns;
+};
+
+struct layoutGeometry {
+    // Minimum recommended terminal dimensions.
+    int minWidth = 80;
+    int minHeight = 20;
+
+    // Number of channels displayed per page.
+    int pageSize = 16;
+
+    // Number of channel columns/groups displayed simultaneously.
+    int channelColumns = 1;
 };
 
 struct layoutType {
+    layoutGeometry geometry;
+
     std::unordered_map<std::string, layoutSect> views;   // Channel view items
-    std::unordered_map<std::string, layoutSect> widgets; // Widget view items
+    std::unordered_map<std::string, std::vector<std::string>> widgets; // Widget view items
 };
 
 struct layoutDef {
+    int version = 1;
+
     std::unordered_map<std::string, layoutType> variants;
 };
 

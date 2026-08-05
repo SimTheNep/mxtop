@@ -1,40 +1,59 @@
 {
-  "full": {
-    "views": {
-      "channels": [
-        "patch", "volume", "pan", "pitch", "part_tune", "cutoff", "resonance", 
-        "attack", "decay", "release", "chorus_send", "reverb_send", 
-        "output_assign", "mfx", "vibrato_depth", "vibrato_rate", 
-        "vibrato_delay", "portamento_switch", "portamento_time"
-      ],
-      "system_fx": [
-        "reverb", "chorus", "afx", "mfx_a", "mfx_b", "mfx_c"
-      ],
-      "master_output": [
-        "master_tune", "transpose", "master_volume", "out_rout", "bypass"
-      ]
+  "version": 1,
+  "profiles": {
+    "full": {
+      "geometry": { "min_width": 160, "min_height": 42, "page_size": 16, "channel_columns": 1 },
+      "views": {
+        "channels": [
+          { "field": "patch", "label": "PGN", "width": 28 },
+          { "field": "volume", "label": "VOL", "width": 7 },
+          { "field": "pan", "label": "PAN", "width": 7 },
+          { "fields": ["pitch", "part_tune"], "label": "PITCH", "join": " / ", "width": 12 },
+          { "fields": ["cutoff", "resonance"], "label": "CUT/RES", "join": " / ", "width": 15 },
+          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / ", "width": 17 },
+          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / ", "width": 14 },
+          { "field": "output_assign", "label": "OUT", "width": 8 },
+          { "field": "mfx", "label": "MFX", "width": 6 },
+          { "fields": ["vibrato_depth", "vibrato_rate", "vibrato_delay"], "label": "VIB:D/R/D", "join": "/", "width": 17 },
+          { "fields": ["portamento_switch", "portamento_time"], "label": "PORTA", "join": "/", "width": 12 },
+          { "field": "tune", "label": "TUNE", "width": 7 }
+        ],
+        "system_fx": ["reverb", "chorus", "afx", "mfx_a", "mfx_b", "mfx_c"],
+        "master_output": ["master_tune", "transpose", "master_volume", "out_rout", "bypass"]
+      },
+      "widgets": {
+        "mfx_status": ["mfx_1_led", "mfx_2_led", "mfx_3_led"],
+        "system_load": ["polyphony_count", "ram_usage", "cpu_usage"],
+        "bottom_panels": ["event_log", "activity_histogram"]
+      }
     },
-    "widgets": {
-      "mfx_status": ["mfx_1_led", "mfx_2_led", "mfx_3_led"],
-      "system_load": ["polyphony_count", "ram_usage", "cpu_usage"],
-      "bottom_panels": ["event_log", "activity_histogram"]
-    }
-  },
-  "compact": {
-    "views": {
-      "channels": [
-        "patch", "volume", "pan", "pitch", "cutoff", "resonance", 
-        "attack", "decay", "release", "chorus_send", "reverb_send", 
-        "output_assign", "mfx", "vibrato_depth", "vibrato_rate", 
-        "vibrato_delay", "portamento_switch", "tune"
-      ]
-    }
-  },
-  "tiny": {
-    "views": {
-      "channels": [
-        "patch", "volume"
-      ]
+    "compact": {
+      "geometry": { "min_width": 160, "min_height": 22, "page_size": 16, "channel_columns": 1 },
+      "views": {
+        "channels": [
+          { "field": "patch", "label": "PGN", "width": 28 },
+          { "field": "volume", "label": "VOL", "width": 7 },
+          { "field": "pan", "label": "PAN", "width": 7 },
+          { "field": "pitch", "label": "PITCH", "width": 8 },
+          { "fields": ["cutoff", "resonance"], "label": "CUT/RES", "join": " / ", "width": 15 },
+          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / ", "width": 17 },
+          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / ", "width": 14 },
+          { "field": "output_assign", "label": "OUT", "width": 8 },
+          { "field": "mfx", "label": "MFX", "width": 6 },
+          { "fields": ["vibrato_depth", "vibrato_rate", "vibrato_delay"], "label": "VIB:D/R/D", "join": "/", "width": 17 },
+          { "field": "portamento_switch", "label": "PORTA", "width": 8 },
+          { "field": "tune", "label": "TUNE", "width": 7 }
+        ]
+      }
+    },
+    "tiny": {
+      "geometry": { "min_width": 78, "min_height": 12, "page_size": 16, "channel_columns": 2 },
+      "views": {
+        "channels": [
+          { "field": "patch", "label": "PATCH", "width": 24 },
+          { "field": "volume", "label": "VOL", "width": 7 }
+        ]
+      }
     }
   }
 }

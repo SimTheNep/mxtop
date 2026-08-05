@@ -13,10 +13,10 @@ Implementation Chart or SysEx documentation whenever possible.
 
 Notes
 -----
-• "address" is a continuous hexadecimal string (e.g. "01000005").
-• "packet" and "data" are space-separated hexadecimal bytes.
-• Packet placeholders are enclosed in [].
-• Lookup names referenced in module.json must exist in dictionary.json.
+- "address" is a continuous hexadecimal string (e.g. "01000005").
+- "packet" and "data" are space-separated hexadecimal bytes.
+- Packet placeholders are enclosed in [].
+- Lookup names referenced in module.json must exist in dictionary.json.
 
 ================================================================================
 MODULE.JSON
@@ -144,7 +144,7 @@ Special Properties
 controls_rhythm Marks a drum-mode assignment object.
 parts           Per-channel SysEx address table. Supports:
                 - Array of objects: [{"channel": 0, "address": "401000"}]
-                - Scalable formula: {"base": "401000", "stride": "0100", "channels": [0,1,2]}
+                - Scalable formula: {"base": "401000", "channels": [0,1,2]}
 
 ================================================================================
 LAYOUTS.JSON
@@ -152,12 +152,126 @@ LAYOUTS.JSON
 
 Defines only the user interface.
 
+Root Properties
+---------------
+
+version         Layout format version. (unused atm)
+profiles        Collection of available UI layout profiles.
+
 Variants
 --------
 
 full      Patches and parameters per channel, effects, system, widgets
 compact   Patches and parameters per channel
 tiny      Patches and volume bar per channel
+
+Each profile contains:
+
+geometry      Layout sizing and channel arrangement.
+views         Visible UI sections and parameters.
+widgets       Optional UI widgets.
+
+Geometry
+--------
+
+min_width       Minimum recommended terminal width.
+min_height      Minimum recommended terminal height.
+page_size       Number of channels displayed per page.
+channel_columns Number of channel columns/groups displayed simultaneously.
+
+Channel Views
+-------------
+
+channels        Parameters displayed for each MIDI channel.
+
+Each channel entry may be:
+
+string          Single object ID.
+object          Structured column definition.
+
+Structured Channel Entries
+---------------------------
+
+field           Single module object ID.
+fields          Multiple module object IDs grouped into one column.
+label           Display label for the column.
+join            Separator used between grouped field values.
+width           Requested column width in terminal cells.
+
+field and fields are mutually exclusive.
+
+A channel field references an object ID defined in module.json.
+
+Grouped fields allow multiple parameters to be displayed together in one
+column.
+
+The order of entries determines the display order.
+
+System FX
+---------
+
+system_fx       System-level effects and processing parameters.
+
+Values reference object IDs defined in module.json.
+
+Master Output
+-------------
+
+master_output  Global master and output parameters.
+
+Values reference object IDs defined in module.json.
+
+Widgets
+-------
+
+widgets         Optional non-channel UI elements.
+
+Widget groups may contain:
+
+Status indicators
+LEDs
+System load displays
+Polyphony counters
+Event logs
+Activity visualizers
+Histograms
+Other custom UI elements
+
+Widget IDs are interpreted by the UI layer.
+
+Channel Paging
+--------------
+
+Channels are displayed in groups based on page_size.
+
+The UI may provide keyboard navigation between channel pages.
+
+Channel page labels use groups such as:
+
+A01..A16
+B01..B16
+C01..C16
+
+The exact key bindings are implemented by the UI layer.
+
+channel_columns controls how channels are arranged horizontally within a page.
+
+A value of 1 displays a standard single-column channel table.
+
+A value of 2 may split a 16-channel page into two groups of 8 channels.
+
+Layout Selection
+----------------
+
+The active layout profile may be selected by the UI layer.
+
+Supported profile names are:
+
+full
+compact
+tiny
+
+Additional profiles may be added in the future.
 
 ================================================================================
 DICTIONARY.JSON
@@ -239,6 +353,21 @@ SUPPORTED FEATURES
 - SysEx Patch Selection
 - Rhythm Part Assignment
 - Modular UI Layouts
+- Multiple Layout Profiles
+- Full / Compact / Tiny Layout Modes
+- Configurable Layout Geometry
+- Configurable Minimum Width & Height
+- Configurable Channel Page Size
+- Configurable Channel Column Count
+- Per-Channel Field Selection
+- Grouped Multi-Field Columns
+- Custom Column Labels
+- Custom Column Widths
+- Custom Multi-Field Join Separators
+- System FX Views
+- Master Output Views
+- Optional UI Widgets
+- Channel Page Navigation
 
 ================================================================================
 DATA FLOW

@@ -215,9 +215,29 @@ void stateLayer::updtNote(channelState& ch, int note, int velocity, bool on) {
 takeSnapshot stateLayer::snapshot(int channel) const {
     takeSnapshot snap;
 
+    if (channel == -1) {
+        for (const auto& [channelNumber, channelState] : channels_) {
+            if (channelNumber < 0) {
+                continue;
+            }
+
+            snap.polyCount += static_cast<int>(
+                channelState.activeNotes.size());
+
+            if (channelState.lastNote != -1) {
+                snap.lastNote = channelState.lastNote;
+                snap.lastVelo = channelState.lastVelo;
+            }
+        }
+
+        return snap;
+    }
+
     const channelState* ch = getChannel(channel);
 
-    if (!ch) return snap;
+    if (!ch) {
+        return snap;
+    }
 
     for (const auto& [id, raw] : ch->rawValues) {
         auto objIt = objectById_.find(id);

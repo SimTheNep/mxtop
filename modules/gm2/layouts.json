@@ -1,34 +1,56 @@
 {
-  "full": {
-    "views": {
-      "channels": [
-        "patch", "volume", "pan", "pitch", "cutoff", "resonance",
-        "attack", "decay", "release", "chorus_send", "reverb_send",
-        "expression", "modulation", "sustain",
-        "portamento_switch", "portamento_time",
-        "reset_all_controllers"
-      ],
-      "system_fx": [],
-      "master_output": [
-        "master_tune", "master_volume", "transpose"
-      ]
-    }
-  },
-  "compact": {
-    "views": {
-      "channels": [
-        "patch", "volume", "pan", "pitch", "cutoff", "resonance",
-        "attack", "decay", "release", "chorus_send", "reverb_send",
-        "expression", "modulation", "sustain",
-        "portamento_switch", "master_tune"
-      ]
-    }
-  },
-  "tiny": {
-    "views": {
-      "channels": [
-        "patch", "volume"
-      ]
+  "version": 1,
+  "profiles": {
+    "full": {
+      "geometry": { "min_width": 160, "min_height": 42, "page_size": 16, "channel_columns": 1 },
+      "views": {
+        "channels": [
+          { "field": "patch", "label": "PGN", "width": 28 },
+          { "field": "volume", "label": "VOL", "width": 7 },
+          { "field": "pan", "label": "PAN", "width": 7 },
+          { "field": "pitch", "label": "PITCH", "width": 8 },
+          { "field": "cutoff", "label": "CUT", "width": 8 },
+          { "field": "resonance", "label": "RES", "width": 8 },
+          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / ", "width": 17 },
+          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / ", "width": 14 },
+          { "field": "expression", "label": "EXP", "width": 7 },
+          { "field": "modulation", "label": "MOD", "width": 7 },
+          { "field": "sustain", "label": "SUS", "width": 7 },
+          { "fields": ["portamento_switch", "portamento_time"], "label": "PORTA", "join": "/", "width": 12 },
+          { "field": "reset_all_controllers", "label": "RESET", "width": 10 }
+        ],
+        "system_fx": [],
+        "master_output": ["master_tune", "master_volume", "transpose"]
+      }
+    },
+    "compact": {
+      "geometry": { "min_width": 160, "min_height": 22, "page_size": 16, "channel_columns": 1 },
+      "views": {
+        "channels": [
+          { "field": "patch", "label": "PGN", "width": 28 },
+          { "field": "volume", "label": "VOL", "width": 7 },
+          { "field": "pan", "label": "PAN", "width": 7 },
+          { "field": "pitch", "label": "PITCH", "width": 8 },
+          { "field": "cutoff", "label": "CUT", "width": 8 },
+          { "field": "resonance", "label": "RES", "width": 8 },
+          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / ", "width": 17 },
+          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / ", "width": 14 },
+          { "field": "expression", "label": "EXP", "width": 7 },
+          { "field": "modulation", "label": "MOD", "width": 7 },
+          { "field": "sustain", "label": "SUS", "width": 7 },
+          { "field": "portamento_switch", "label": "PORTA", "width": 8 },
+          { "field": "master_tune", "label": "TUNE", "width": 7 }
+        ]
+      }
+    },
+    "tiny": {
+      "geometry": { "min_width": 78, "min_height": 12, "page_size": 16, "channel_columns": 2 },
+      "views": {
+        "channels": [
+          { "field": "patch", "label": "PATCH", "width": 24 },
+          { "field": "volume", "label": "VOL", "width": 7 }
+        ]
+      }
     }
   }
 }
