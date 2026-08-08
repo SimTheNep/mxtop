@@ -39,7 +39,8 @@ MAIN_SRCS := \
     tui/widgets/system_resources.cpp \
     tui/widgets/status_log.cpp \
     tui/widgets/activity_log.cpp \
-    tui/debug/debug_ui.cpp
+    tui/debug/debug_ui.cpp \
+    tui/menu/menu_ui.cpp
 
 MAIN_OBJS := $(MAIN_SRCS:.cpp=.o)
 
@@ -93,14 +94,14 @@ $(JSON_TARGET): $(JSON_OBJS)
 	@mkdir -p json_parser
 	@$(CXX) $^ -o $@
 
-cleanup-objects:
-	@printf "[RM ] object files\n"
-	@find . -name "*.o" -delete
+# cleanup-objects:
+# 	@printf "[RM ] object files\n"
+# 	@find . -name "*.o" -delete
 
-clean:
-	@printf "[RM ] object files\n"
-	@find . -name "*.o" -delete
-	@printf "[RM ] executables\n"
-	@rm -f $(ALL_TARGETS)
+# clean:
+# 	@printf "[RM ] object files\n"
+# 	@find . -name "*.o" -delete
+# 	@printf "[RM ] executables\n"
+# 	@rm -f $(ALL_TARGETS)
 
 .PHONY: all clean

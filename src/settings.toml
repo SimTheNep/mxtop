@@ -61,7 +61,7 @@
 #   "kimbie_dark"           - Earthy brown dark
 #   "matcha_dark"           - Soft green dark
 #
-theme = "base"
+theme = "default"
 
 # Formatting for CC values/parameters: "decimal" or "hex"
 numeral_format = "decimal"

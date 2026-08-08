@@ -2,6 +2,7 @@
 #include "midi_reader/types.hpp"
 #include "tui/debug/debug_ui.hpp"
 #include "tui/ui_main.hpp"
+#include "tui/menu/menu_ui.hpp"
 #include "json_parser/parser.hpp"
 #include "state_layer/state.hpp"
 #include "log.hpp"
@@ -70,6 +71,11 @@ nlohmann::json loadJsonFile(const std::string& path) {
 }
 
 int main(int argc, char** argv) {
+    // Temporary menu render
+    menuUi menu({"Port 0", "Port 1"});
+    menu.run();
+    return 0;
+
     CLI::App app{ "mxtop MIDI Visualizer" };
 
     // ARGUMENTS
