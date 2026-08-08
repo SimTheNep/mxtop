@@ -47,15 +47,11 @@ private:
     ftxui::Element renderFooter() const;
 
     // QUEUE HANDLING
-    void addFile();
+    void addFilePrompt();
     void removeSelFile();
     void moveQueueUp();
     void moveQueueDown();
-    void movePortCursorLeft();
-    void movePortCursorRight();
-    void toggleSelPort();
-    void cyclePortLeft();
-    void cyclePortRight();
+    void togglePort(unsigned int portIdx);
 
     // SETTINGS HANDLING
     void cycleSettingLeft();

@@ -121,6 +121,74 @@ namespace {
 
         return "CSS visual palette preset"; // Fallback default
     }
+
+    // Lower string, has been done beforfe but I forgot where
+    std::string lowerStr(std::string s) {
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+        return s;
+    }
+
+    // Autocomplete + ghost
+    std::string autoComplete(const std::string& input) {
+        if (input.empty()) return "";
+
+        std::filesystem::path p(input);
+        std::filesystem::path dir;
+        std::string prefix;
+
+        // Handle trailing slashes when entering directories
+        if (input.back() == '/' || input.back() == '\\') {
+            dir = p;
+            prefix = "";
+        } else {
+            dir = p.has_parent_path() ? p.parent_path() : ".";
+            prefix = p.filename().string();
+        }
+
+        std::error_code ec;
+        if (!std::filesystem::exists(dir, ec) || !std::filesystem::is_directory(dir, ec)) return "";
+
+        std::string lowerPrefix = lowerStr(prefix);
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir, ec)) {
+            std::string name = entry.path().filename().string();
+            std::string lowerName = lowerStr(name);
+
+            // Case-insensitive
+            if (lowerName.rfind(lowerPrefix, 0) == 0 && name.size() >= prefix.size()) {
+                std::string suffix = name.substr(prefix.size());
+                if (entry.is_directory(ec) && (suffix.empty() || suffix.back() != '/')) {
+                    suffix += "/";
+                }
+                if (!suffix.empty()) return suffix;
+            }
+        }
+        return "";
+    }
+
+    // Clears the word back to the previous /
+    void clearWord(std::string& str) {
+        if (str.empty()) return;
+
+        // Trim slashes/spaces
+        while (!str.empty() && (str.back() == '/' || str.back() == '\\' || str.back() == ' ')) {
+            str.pop_back();
+        }
+
+        size_t pos = str.find_last_of("/\\ ");
+        if (pos == std::string::npos) {
+            str.clear();
+        } else {
+            str = str.substr(0, pos + 1);
+        }
+    }
+
+    // Parses HEX into port index
+    int charToPort(char c) {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+        return -1;
+    }
 }
 
 // RUNTIME
@@ -136,7 +204,7 @@ menuReturn menuUi::run() {
     // Queue/Settings/Help
     auto component = Renderer([this] {
         Element body = text("");
-        if (activePane_ == Pane::Queue)    body = text("queue pane goes here");
+        if (activePane_ == Pane::Queue)    body = renderQueue();
         if (activePane_ == Pane::Settings) body = renderSettings();
         if (activePane_ == Pane::Help)     body = renderHelp();
 
@@ -150,7 +218,56 @@ menuReturn menuUi::run() {
     });
 
     auto eventHandler = CatchEvent(component, [&](Event ev) {
-        // Keybindings
+        // Locked when typikng in the queue prompt
+        if (activePane_ == Pane::Queue && addingFile_) {
+            if (ev == Event::Escape) {
+                addingFile_ = false;
+                fileInputBuf_.clear();
+                return true;
+            }
+
+            if (ev == Event::Return) {
+                if (!fileInputBuf_.empty()) {
+                    queue_.push_back({ fileInputBuf_, { 0 } });
+                    fileInputBuf_.clear();
+                    addingFile_ = false;
+                    queueCursor_ = static_cast<int>(queue_.size()) - 1;
+                }
+                return true;
+            }
+
+            // Ctrl + D, clear entire path
+            if (ev == Event::Character("\x04")) {
+                fileInputBuf_.clear();
+                return true;
+            }
+
+            // Ctrl + W, lear Previous Word
+            if (ev == Event::Character("\x17")) {
+                clearWord(fileInputBuf_);
+                return true;
+            }
+
+            if (ev == Event::Tab || ev == Event::ArrowRight) {
+                std::string ghost = autoComplete(fileInputBuf_);
+                if (!ghost.empty()) fileInputBuf_ += ghost;
+                return true;
+            }
+
+            if (ev == Event::Backspace) {
+                if (!fileInputBuf_.empty()) fileInputBuf_.pop_back();
+                return true;
+            }
+
+            if (ev.is_character()) {
+                fileInputBuf_ += ev.character();
+                return true;
+            }
+
+            return true;
+        }
+
+        // Global Keybindings (when not typing)
         if (ev == Event::Character('q') || ev == Event::Escape) {
             screen_.Exit();
             return true;
@@ -160,6 +277,51 @@ menuReturn menuUi::run() {
             activePane_ = (activePane_ == Pane::Queue) ? Pane::Settings
                 : (activePane_ == Pane::Settings) ? Pane::Help : Pane::Queue;
             return true;
+        }
+
+        // Queue Pane Keybindings
+        if (activePane_ == Pane::Queue) {
+            if (ev == Event::Character('a')) {
+                addingFile_ = true;
+                fileInputBuf_.clear();
+                return true;
+            }
+            if (ev == Event::Character('d')) {
+                if (!queue_.empty()) {
+                    queue_.erase(queue_.begin() + queueCursor_);
+                    if (queueCursor_ >= static_cast<int>(queue_.size()) && queueCursor_ > 0)
+                        queueCursor_--;
+                }
+                return true;
+            }
+            if (ev == Event::ArrowUp || ev == Event::Character('k')) {
+                if (queueCursor_ > 0) queueCursor_--;
+                return true;
+            }
+            if (ev == Event::ArrowDown || ev == Event::Character('j')) {
+                if (queueCursor_ < static_cast<int>(queue_.size()) - 1) queueCursor_++;
+                return true;
+            }
+
+            // Press Enter to start playback
+            if (ev == Event::Return) {
+                if (!queue_.empty()) {
+                    result.action = menuAction::Play;
+                    result.queue = queue_;
+                    screen_.Exit();
+                }
+                return true;
+            }
+
+            // Port Assignment (0..9..A..F)
+            if (ev.is_character()) {
+                char c = ev.character()[0];
+                int port = charToPort(c);
+                if (port >= 0 && port < 16) {
+                    togglePort(static_cast<unsigned int>(port));
+                    return true;
+                }
+            }
         }
 
         // Settings keybindings
@@ -237,6 +399,111 @@ Element menuUi::renderTabs() const {
         tab("Help", Pane::Help),
         filler()
     });
+}
+
+// RENDER QUEUE
+//
+//
+
+// Toggles the port selection in the selcted file
+void menuUi::togglePort(unsigned int portIdx) {
+    if (queue_.empty() || queueCursor_ < 0 || queueCursor_ >= static_cast<int>(queue_.size())) return;
+
+    auto& ports = queue_[queueCursor_].ports;
+    auto it = std::find(ports.begin(), ports.end(), portIdx);
+
+    if (it != ports.end()) {
+        ports.erase(it); // Remove if already assigned
+    } else {
+        ports.push_back(portIdx); // Add if not assigned
+        std::sort(ports.begin(), ports.end());
+    }
+}
+
+Element menuUi::renderQueue() const {
+    const auto palette = settings_.palette();
+    Elements queueRows;
+
+    if (queue_.empty() && addingFile_){
+        queueRows.push_back(text(" Queue is empty. Press 'a' to add a file.") | color (palette.textDim));
+
+    } else {
+        for (int i = 0; i < static_cast<int>(queue_.size()); i++){
+            bool selected = (i == queueCursor_);
+            const auto& item = queue_[i];
+
+            Element prefix = selected
+                ? (text(" 󰐊 ") | color(palette.headerTitle) | bold) 
+                : text("   ");
+            
+            Element num = text("[" + std:: to_string(i+1) + "]") | color(palette.textDim);
+
+            Element name = text(item.file) | size(WIDTH, EQUAL, 32);
+
+            if (selected){
+                name = name | color(palette.textPrimary) | bold;
+            } else {
+                name = name | color(palette.textDim);
+            }
+
+            // Ports
+            Elements portBadges;
+            for (unsigned int p : item.ports) {
+                portBadges.push_back(
+                    text(" P" + std::to_string(p) + " ") | color(palette.fxValue) | bold
+                );
+            }
+
+            queueRows.push_back(hbox({prefix, num, name, hbox(std::move(portBadges))}));
+        }
+    }
+
+    // Bottom tooltip
+    Element bottomDrawer;
+
+    if (addingFile_) {
+        std::string ghost = autoComplete(fileInputBuf_);
+        bottomDrawer = vbox({
+            hbox({
+                text(" file path > ") | color(palette.headerBpm) | bold,
+                text(fileInputBuf_) | color(palette.headerClock) | bold,
+                text(ghost) | color(palette.textDim),
+                text("█") | blink | color(palette.headerClock)
+            }),
+            text(" [Enter] Confirm  [Tab/→] Complete  [Ctrl+W] Clear Word  [Ctrl+D] Clear Line  [Esc] Cancel ") | color(palette.textDim)
+        });
+    } else if (queue_.empty()) {
+        bottomDrawer = hbox({
+            text(" Tip: ") | color(palette.masterLabel) | bold,
+            text("Press 'a' to add a MIDI file to the queue.") | color(palette.textPrimary)
+        });
+    } else {
+        const auto& sel = queue_[queueCursor_];
+        std::string portsStr = "Assigned Ports: ";
+        for (size_t i = 0; i < sel.ports.size(); ++i) {
+            portsStr += "P" + std::to_string(sel.ports[i]) + (i + 1 < sel.ports.size() ? ", " : "");
+        }
+
+        bottomDrawer = vbox({
+            hbox({
+                text(" Selected: ") | color(palette.masterLabel) | bold,
+                text(sel.file) | color(palette.textPrimary) | bold,
+                text("  (" + portsStr + ")") | color(palette.fxLabel)
+            }),
+            hbox({
+                text(" [0..9] [A..F] Toggle Port  [a] Add  [d] Delete  [Enter] Start Playback ") | color(palette.footerText)
+            })
+        });
+    }
+
+    return window(
+        text(" QUEUE ") | bold,
+        vbox({
+            vbox(std::move(queueRows)) | flex,
+            separator() | color(palette.tableHeader),
+            bottomDrawer
+        })
+    ) | color(palette.tableHeader) | flex;
 }
 
 // SETTINGS PANE
@@ -389,6 +656,8 @@ Element menuUi::renderHelp() const {
         text("Queue") | color(palette.headerTitle) | bold,
         row("j / k / ↑ ↓", "move selection up/down"),
         row("a", "add a MIDI file to the queue"),
+        row("ctrl + d", "clear prompt text"),
+        row("ctrl + w", "clear to last /"),
         row("0..9 / A..F", "assign ports 1..16 to the selected queue entry"),
         row("d", "remove the selected queue entry"),
         row("Enter", "start playback"),
