@@ -821,7 +821,7 @@ Element menuUi::renderHelp() const {
     };
 
     Elements lines = {
-        text("Queue") | color(palette.headerTitle) | bold,
+        text("[ Queue ]") | color(palette.headerTitle) | bold,
         row("   j / k / ↑ ↓", "move selection up/down"),
         row("   a", "add a MIDI file to the queue"),
         row("   ctrl + d", "clear prompt text"),
@@ -830,12 +830,12 @@ Element menuUi::renderHelp() const {
         row("   d", "remove the selected queue entry"),
         row("   Enter", "start playback"),
         text(""),
-        text("Settings") | color(palette.headerTitle) | bold,
+        text("[ Settings ]") | color(palette.headerTitle) | bold,
         row("   j / k / ↑ ↓", "move selection up/down"),
         row("   h / l / ← →", "change selected setting value"),
         row("   Space / Enter", "cycle selected setting forward"),
         text(""),
-        text("Playback") | color(palette.headerTitle) | bold,
+        text("[ Playback ]") | color(palette.headerTitle) | bold,
         row("   h / l / ← →", "cycle port pages"),
         row("   j / k / ↑ ↓", "cycle through the queue"),
         row("   x", "stop playback"),
