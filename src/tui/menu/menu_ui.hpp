@@ -60,6 +60,9 @@ private:
     // SETTINGS HANDLING
     void cycleSettingLeft();
     void cycleSettingRight();
+    void cycleSetting(int delta); // -1 for left, +1 for right
+
+    static constexpr int kNumSettings = 10;
 
     std::vector<std::string> availablePorts_;
     std::vector<queueSlot> queue_;

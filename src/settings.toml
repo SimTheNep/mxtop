@@ -1,82 +1,15 @@
-# mxtop config
+# MIDI Visualizer Configuration
 
 [display]
-# Preset Themes:
-#   "default"               - Native terminal colors (transparent bg)
-#   "base"                  - Base theme
-#   "base_light"            - The base theme but it kills your eyes
-#   "btop"                  - The familiar btop++ theme
-#   "monochrome"            - Black & white retro terminal style
-#
-#   "sd90_blue"             - Edirol SD-90 cyan/deep blue LCD
-#   "sd90_blue_inverted"    - SD-90 inverted blue LCD
-#   "sc_amber"              - Roland Sound Canvas amber LCD
-#   "sc_amber_inverted"     - Sound Canvas inverted amber LCD
-#   "xv_green"              - Roland XV-5080 neon green LCD
-#   "xv_green_inverted"     - XV inverted green LCD
-#
-#   "synth"                 - Cyberpunk synth theme (credit to Umbragloom)
-#   "outrun"                - High-contrast outrun synthwave
-#   "hot_purple"            - Traffic light neon purple
-#   "cyberpunk"             - Night City neon yellow & cyan
-#
-#   "dracula"               - Vampire dark purple & neon
-#   "nord"                  - Arctic slate blue
-#   "one_dark"              - Atom One Dark
-#   "monokai"               - Classic Monokai
-#   "horizon"               - Warm dark horizon
-#   "rose_pine"             - Soho cyber-floral glow
-#   "shades_of_purple"      - Deep purple & yellow
-#
-#   "catppuccin_mocha"      - Soothing dark pastel (Mocha)
-#   "catppuccin_macchiato"  - Soothing dark pastel (Macchiato)
-#   "catppuccin_frappe"     - Soothing dark pastel (Frappe)
-#   "catppuccin_latte"      - Light pastel (Latte)
-#
-#   "tokyo_night"           - Tokyo night dark theme
-#   "tokyo_storm"           - Tokyo storm blue theme
-#
-#   "gruvbox_dark"          - Retro warm hardware dark
-#   "gruvbox_light"         - Retro warm hardware light
-#
-#   "solarized_dark"        - Solarized dark precision
-#   "solarized_light"       - Solarized light precision
-#
-#   "everforest_dark_hard"  - Soft forest dark (Hard)
-#   "everforest_dark_medium"- Soft forest dark (Medium)
-#   "everforest_light"      - Soft forest light
-#
-#   "flexoki_dark"          - Inky warm paper dark
-#   "flexoki_light"         - Inky warm paper light
-#
-#   "flat_remix"            - Flat remix dark
-#   "flat_remix_light"      - Flat remix light
-#
-#   "adapta"                - Material teal dark
-#   "adwaita"               - GNOME light theme
-#   "adwaita_dark"          - GNOME dark theme
-#   "ayu"                   - Ayu dark theme
-#   "dusklight"             - Twilight blue dark
-#   "elementarish"          - Pantheon dark
-#   "kimbie_dark"           - Earthy brown dark
-#   "matcha_dark"           - Soft green dark
-#
 theme = "default"
-
-# Formatting for CC values/parameters: "decimal" or "hex"
 numeral_format = "decimal"
-
-# Force sound module mode: "auto", "sd90", "gs", "xg", "gm2"
 module_override = "auto"
-
-# Layout widget visibility
 show_event_log = true
 show_activity_grid = true
 log_max_visible = 14
 
 [meter]
-# Sensitivity & physics of the tiny layout's Vu-meter
-highlight_timeout_ms = 100.0
-note_off_grace_ms = 50.0
+highlight_timeout_ms = 100
+note_off_grace_ms = 50
 vu_bar_width = 20
 show_peak_marker = true
