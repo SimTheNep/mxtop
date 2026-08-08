@@ -12,4 +12,4 @@ log_max_visible = 14
 highlight_timeout_ms = 100
 note_off_grace_ms = 50
 vu_bar_width = 20
-show_peak_marker = true
+show_peak_marker = false
