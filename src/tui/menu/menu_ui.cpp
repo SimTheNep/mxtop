@@ -4,9 +4,13 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <set>
+#include <thread>
 
 using namespace ftxui;
 
@@ -122,7 +126,7 @@ namespace {
         return "CSS visual palette preset"; // Fallback default
     }
 
-    // Lower string, has been done beforfe but I forgot where
+    // Lower string
     std::string lowerStr(std::string s) {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
         return s;
@@ -187,7 +191,41 @@ namespace {
     int charToPort(char c) {
         if (c >= '0' && c <= '9') return c - '0';
         if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
         return -1;
+    }
+
+    // Formats port lists into clean ranges (e.g. "P1–P16 (All)" or "P1–P6, P9–P12")
+    std::string formatPorts(const std::vector<unsigned int>& ports) {
+        if (ports.empty()) return "None";
+        if (ports.size() == 16) return "P1–P16 (All)";
+
+        std::vector<std::string> ranges;
+        size_t i = 0;
+        while (i < ports.size()) {
+            size_t start = i;
+            while (i + 1 < ports.size() && ports[i + 1] == ports[i] + 1) {
+                i++;
+            }
+            if (i > start) {
+                ranges.push_back("P" + std::to_string(ports[start] + 1) + "–P" + std::to_string(ports[i] + 1));
+            } else {
+                ranges.push_back("P" + std::to_string(ports[start] + 1));
+            }
+            i++;
+        }
+
+        std::string result;
+        for (size_t r = 0; r < ranges.size(); ++r) {
+            result += ranges[r] + (r + 1 < ranges.size() ? ", " : "");
+        }
+        return result;
+    }
+
+    // Get double timestamp in seconds for animations
+    double getTimeSec() {
+        auto now = std::chrono::steady_clock::now();
+        return std::chrono::duration<double>(now.time_since_epoch()).count();
     }
 }
 
@@ -201,6 +239,21 @@ menuUi::menuUi(const std::vector<std::string>& availablePorts, Settings settings
 menuReturn menuUi::run() {
     menuReturn result;
 
+    // Background refresh thread (~30 FPS animation driver)
+    std::atomic<bool> animating(true);
+    std::thread animThread([this, &animating] {
+        while (animating) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(33)); // ~30 FPS
+            screen_.PostEvent(Event::Custom);
+        }
+    });
+
+    auto exitMenu = [&] {
+        animating = false;
+        if (animThread.joinable()) animThread.join();
+        screen_.Exit();
+    };
+
     // Queue/Settings/Help
     auto component = Renderer([this] {
         Element body = text("");
@@ -211,14 +264,20 @@ menuReturn menuUi::run() {
         return vbox({
             renderLogo(),
             renderTabs(),
-            body | flex,
+            text(""),
+            body | hcenter | flex, // Centered pane body
             filler(),
             renderFooter()
         }) | bgcolor(settings_.palette().background) | color(settings_.palette().textPrimary);
     });
 
     auto eventHandler = CatchEvent(component, [&](Event ev) {
-        // Locked when typikng in the queue prompt
+        // Redraw frame on Custom Animation Tick
+        if (ev == Event::Custom) {
+            return false;
+        }
+
+        // Locked when typing in the queue prompt
         if (activePane_ == Pane::Queue && addingFile_) {
             if (ev == Event::Escape) {
                 addingFile_ = false;
@@ -242,7 +301,7 @@ menuReturn menuUi::run() {
                 return true;
             }
 
-            // Ctrl + W, lear Previous Word
+            // Ctrl + W, Clear previous Word
             if (ev == Event::Character("\x17")) {
                 clearWord(fileInputBuf_);
                 return true;
@@ -269,7 +328,7 @@ menuReturn menuUi::run() {
 
         // Global Keybindings (when not typing)
         if (ev == Event::Character('q') || ev == Event::Escape) {
-            screen_.Exit();
+            exitMenu();
             return true;
         }
 
@@ -308,7 +367,7 @@ menuReturn menuUi::run() {
                 if (!queue_.empty()) {
                     result.action = menuAction::Play;
                     result.queue = queue_;
-                    screen_.Exit();
+                    exitMenu();
                 }
                 return true;
             }
@@ -349,6 +408,10 @@ menuReturn menuUi::run() {
 
     screen_.Loop(eventHandler);
 
+    // Stop animation thread on exit
+    animating = false;
+    if (animThread.joinable()) animThread.join();
+
     result.settings = settings_;
     return result;
 }
@@ -358,8 +421,6 @@ menuReturn menuUi::run() {
 //
 
 Element menuUi::renderLogo() const {
-    const auto palette = settings_.palette();
-
     // clang-format off
     static const char* kLogo[] = {
         "███╗   ███╗██╗  ██╗████████╗ ██████╗ ██████╗ ",
@@ -371,13 +432,23 @@ Element menuUi::renderLogo() const {
     };
     // clang-format on
 
+    // Animated RGB neon wave down logo rows
+    double t = getTimeSec();
     Elements lines;
-    for (const char* row : kLogo)
-        lines.push_back(text(row) | color(palette.headerTitle) | bold);
+
+    for (size_t rowIdx = 0; rowIdx < 6; ++rowIdx) {
+        double phase = t * 3.5 + rowIdx * 0.4;
+        int r = static_cast<int>(110 + 100 * std::sin(phase));
+        int g = static_cast<int>(200 + 50 * std::sin(phase + 1.5));
+        int b = static_cast<int>(220 + 35 * std::sin(phase + 3.0));
+
+        lines.push_back(text(kLogo[rowIdx]) | color(Color::RGB(r, g, b)) | bold);
+    }
 
     return vbox({
+        text(""), // Top margin
         vbox(std::move(lines)) | hcenter,
-        text("A MIDI/SysEx visualizer, by SimTheNep") | color(palette.textDim) | hcenter,
+        text("A MIDI/SysEx visualizer, by SimTheNep") | color(settings_.palette().textDim) | hcenter,
         text("")
     });
 }
@@ -401,11 +472,10 @@ Element menuUi::renderTabs() const {
     });
 }
 
-// RENDER QUEUE
+// QUEUE PANE
 //
 //
 
-// Toggles the port selection in the selcted file
 void menuUi::togglePort(unsigned int portIdx) {
     if (queue_.empty() || queueCursor_ < 0 || queueCursor_ >= static_cast<int>(queue_.size())) return;
 
@@ -422,43 +492,64 @@ void menuUi::togglePort(unsigned int portIdx) {
 
 Element menuUi::renderQueue() const {
     const auto palette = settings_.palette();
+    double t = getTimeSec();
+
+    // Breathing pulse for selection indicator
+    double pulse = 0.5 + 0.5 * std::sin(t * 5.0);
+    int pulseG = static_cast<int>(180 + 75 * pulse);
+    Color pulseColor = Color::RGB(100, pulseG, 220);
+
     Elements queueRows;
 
-    if (queue_.empty() && addingFile_){
-        queueRows.push_back(text(" Queue is empty. Press 'a' to add a file.") | color (palette.textDim));
-
+    if (queue_.empty() && !addingFile_) {
+        queueRows.push_back(text(" Queue is empty. Press 'a' to add a file.") | color(palette.textDim));
     } else {
-        for (int i = 0; i < static_cast<int>(queue_.size()); i++){
+        for (int i = 0; i < static_cast<int>(queue_.size()); i++) {
             bool selected = (i == queueCursor_);
             const auto& item = queue_[i];
 
             Element prefix = selected
-                ? (text(" 󰐊 ") | color(palette.headerTitle) | bold) 
+                ? (text(" 󰐊 ") | color(pulseColor) | bold) 
                 : text("   ");
             
-            Element num = text("[" + std:: to_string(i+1) + "]") | color(palette.textDim);
+            Element num = text("[" + std::to_string(i + 1) + "] ") | color(palette.textDim);
+            Element name = text(item.file) | size(WIDTH, EQUAL, 24);
 
-            Element name = text(item.file) | size(WIDTH, EQUAL, 32);
-
-            if (selected){
+            if (selected) {
                 name = name | color(palette.textPrimary) | bold;
             } else {
                 name = name | color(palette.textDim);
             }
 
-            // Ports
+            // Smooth continuous auto-scrolling for port badges on selected row
+            size_t numPorts = item.ports.size();
+            size_t startIdx = 0;
+            if (selected && numPorts > 6) {
+                // Scroll 1 port badge every 1.2 seconds smoothly
+                startIdx = static_cast<size_t>(t / 1.2) % numPorts;
+            }
+
             Elements portBadges;
-            for (unsigned int p : item.ports) {
+            size_t maxVisibleBadges = std::min(numPorts, size_t(7));
+            for (size_t k = 0; k < maxVisibleBadges; ++k) {
+                size_t pIdx = (startIdx + k) % numPorts;
+                unsigned int p = item.ports[pIdx];
                 portBadges.push_back(
-                    text(" P" + std::to_string(p) + " ") | color(palette.fxValue) | bold
+                    text(" P" + std::to_string(p + 1) + " ") | color(palette.fxValue) | bold
                 );
             }
 
-            queueRows.push_back(hbox({prefix, num, name, hbox(std::move(portBadges))}));
+            if (numPorts > 7) {
+                portBadges.push_back(text("…") | color(palette.headerBpm));
+            }
+
+            Element portsContainer = hbox(std::move(portBadges));
+
+            queueRows.push_back(hbox({ prefix, num, name, text(" "), portsContainer }));
         }
     }
 
-    // Bottom tooltip
+    // Bottom tooltip drawer
     Element bottomDrawer;
 
     if (addingFile_) {
@@ -468,8 +559,8 @@ Element menuUi::renderQueue() const {
                 text(" file path > ") | color(palette.headerBpm) | bold,
                 text(fileInputBuf_) | color(palette.headerClock) | bold,
                 text(ghost) | color(palette.textDim),
-                text("█") | blink | color(palette.headerClock)
-            }),
+                text("_") | blink | color(palette.headerClock)
+            }) | hscroll_indicator | flex,
             text(" [Enter] Confirm  [Tab/→] Complete  [Ctrl+W] Clear Word  [Ctrl+D] Clear Line  [Esc] Cancel ") | color(palette.textDim)
         });
     } else if (queue_.empty()) {
@@ -479,17 +570,14 @@ Element menuUi::renderQueue() const {
         });
     } else {
         const auto& sel = queue_[queueCursor_];
-        std::string portsStr = "Assigned Ports: ";
-        for (size_t i = 0; i < sel.ports.size(); ++i) {
-            portsStr += "P" + std::to_string(sel.ports[i]) + (i + 1 < sel.ports.size() ? ", " : "");
-        }
+        std::string formattedRanges = formatPorts(sel.ports);
 
         bottomDrawer = vbox({
             hbox({
                 text(" Selected: ") | color(palette.masterLabel) | bold,
-                text(sel.file) | color(palette.textPrimary) | bold,
-                text("  (" + portsStr + ")") | color(palette.fxLabel)
-            }),
+                text(sel.file + " ") | color(palette.textPrimary) | bold,
+                text("(" + formattedRanges + ")") | color(palette.fxLabel)
+            }) | hscroll_indicator | flex,
             hbox({
                 text(" [0..9] [A..F] Toggle Port  [a] Add  [d] Delete  [Enter] Start Playback ") | color(palette.footerText)
             })
@@ -503,7 +591,7 @@ Element menuUi::renderQueue() const {
             separator() | color(palette.tableHeader),
             bottomDrawer
         })
-    ) | color(palette.tableHeader) | flex;
+    ) | color(palette.tableHeader) | size(WIDTH, EQUAL, 74);
 }
 
 // SETTINGS PANE
@@ -562,6 +650,12 @@ void menuUi::cycleSettingRight() { cycleSetting(+1); }
 
 Element menuUi::renderSettings() const {
     const auto palette = settings_.palette();
+    double t = getTimeSec();
+
+    // Breathing pulse for selection indicator
+    double pulse = 0.5 + 0.5 * std::sin(t * 5.0);
+    int pulseG = static_cast<int>(180 + 75 * pulse);
+    Color pulseColor = Color::RGB(100, pulseG, 220);
 
     struct ItemDef {
         std::string section;
@@ -601,7 +695,7 @@ Element menuUi::renderSettings() const {
         bool selected = (i == settingsCursor_);
 
         Element prefixElem = selected 
-            ? (text(" ▸ ") | color(palette.headerTitle) | bold) 
+            ? (text(" ▸ ") | color(pulseColor) | bold) 
             : text("   ");
 
         Element labelElem = text(item.label) | size(WIDTH, EQUAL, 28);
@@ -635,7 +729,7 @@ Element menuUi::renderSettings() const {
             filler(),
             hintBox
         })
-    ) | color(palette.tableHeader) | flex;
+    ) | color(palette.tableHeader) | size(WIDTH, EQUAL, 74);
 }
 
 // HELP PANE
@@ -677,7 +771,7 @@ Element menuUi::renderHelp() const {
         row("m + 0..9/ A..F", "mute channel toggle")
     };
 
-    return window(text(" HELP ") | bold, vbox(std::move(lines))) | color(palette.tableHeader) | flex;
+    return window(text(" HELP ") | bold, vbox(std::move(lines))) | color(palette.tableHeader) | size(WIDTH, EQUAL, 74);
 }
 
 // FOOTER
@@ -688,12 +782,26 @@ Element menuUi::renderFooter() const {
     const auto palette = settings_.palette();
 
     Element tabHint = hbox({ text(" [Tab] ") | color(palette.headerClock) | bold, text("Change tabs ") | color(palette.footerText) });
-    Element settingsHint = hbox({ text("| [j/k or ↑/↓] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
-                                 text("| [h/l or ←/→] ") | color(palette.headerClock) | bold, text("Change ") | color(palette.footerText) });
+    
+    Element queueHint = hbox({
+        text("| [j/k] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
+        text("| [a] ") | color(palette.headerClock) | bold, text("Add ") | color(palette.footerText),
+        text("| [d] ") | color(palette.headerClock) | bold, text("Delete ") | color(palette.footerText),
+        text("| [0..F] ") | color(palette.headerClock) | bold, text("Ports ") | color(palette.footerText),
+        text("| [Enter] ") | color(palette.headerClock) | bold, text("Play ") | color(palette.footerText)
+    });
+
+    Element settingsHint = hbox({
+        text("| [j/k or ↑/↓] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
+        text("| [h/l or ←/→] ") | color(palette.headerClock) | bold, text("Change ") | color(palette.footerText)
+    });
+
     Element quitHint = hbox({ text("| [q] ") | color(palette.headerClock) | bold, text("Quit ") | color(palette.footerText) });
 
     Elements footerItems = { tabHint };
-    if (activePane_ == Pane::Settings) {
+    if (activePane_ == Pane::Queue) {
+        footerItems.push_back(queueHint);
+    } else if (activePane_ == Pane::Settings) {
         footerItems.push_back(settingsHint);
     }
     footerItems.push_back(quitHint);
