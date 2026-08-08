@@ -9,6 +9,19 @@
 #include <string>
 #include <vector>
 
+// Helper functions
+std::string getRandomSplashText();
+std::vector<std::string> getThemes();
+std::vector<ModuleOverride> getModules();
+std::string getThemeDesc(const std::string& themeName);
+std::string lowerStr(std::string s);
+std::string autoComplete(const std::string& input);
+void clearWord(std::string& str);
+int charToPort(char c);
+std::string formatPorts(const std::vector<unsigned int>& ports);
+double getTimeSec();
+ftxui::Element scanlineTransition(ftxui::Elements rows, double switchTime);
+
 // Entry in the MIDI queue
 struct queueSlot {
     std::string file;

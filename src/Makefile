@@ -40,7 +40,12 @@ MAIN_SRCS := \
     tui/widgets/status_log.cpp \
     tui/widgets/activity_log.cpp \
     tui/debug/debug_ui.cpp \
-    tui/menu/menu_ui.cpp
+    tui/menu/menu_helpers.cpp \
+    tui/menu/menu_ui.cpp \
+    tui/menu/menu_visuals.cpp \
+    tui/menu/menu_queue.cpp \
+    tui/menu/menu_settings.cpp \
+    tui/menu/menu_help.cpp
 
 MAIN_OBJS := $(MAIN_SRCS:.cpp=.o)
 
