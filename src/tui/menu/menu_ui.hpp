@@ -75,5 +75,6 @@ private:
 
     ftxui::ScreenInteractive screen_ = ftxui::ScreenInteractive::Fullscreen();
 
+    std::string splashText_;
     double lastTabSwitchTime_ = 0.0;
 };

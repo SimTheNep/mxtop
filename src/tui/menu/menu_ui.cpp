@@ -9,6 +9,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <set>
 #include <thread>
 
@@ -19,6 +20,36 @@ using namespace ftxui;
 //
 
 namespace {
+    // Pick a random Minecraft-style splash text
+    std::string getRandomSplashText() {
+        static const std::vector<std::string> kSplashes = {
+            "Also try mxtop!",
+            "Now with 100% more SysEx!",
+            "Roland SD-90 approved!",
+            "Don't feed the MIDI notes after midnight!",
+            "CC 123 All Notes Off!",
+            "May contain traces of General MIDI!",
+            "0x90 Note On!",
+            "SysEx included, synths sold separately!",
+            "Powered by FTXUI & RtMidi!",
+            "16 Channels of pure chaos!",
+            "Boop beep boop!",
+            "Check out settings.toml!",
+            "Made with C++17!",
+            "No floating points were harmed!",
+            "Yamaha XG, Roland GS, or GM2?",
+            "Polyphony count goes brrr!",
+            "Have you changed your theme today?",
+            "Buffer underrun? Never heard of her!",
+            "Press Enter to drop the beat!"
+        };
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<size_t> dist(0, kSplashes.size() - 1);
+        return kSplashes[dist(gen)];
+    }
+
     // Scan for .css files in theme directory
     std::vector<std::string> getThemes() {
         std::set<std::string> themesSet;
@@ -258,7 +289,7 @@ namespace {
 //
 
 menuUi::menuUi(const std::vector<std::string>& availablePorts, Settings settings)
-    : availablePorts_(availablePorts), settings_(std::move(settings)) {}
+    : availablePorts_(availablePorts), settings_(std::move(settings)), splashText_(getRandomSplashText()) {}
 
 menuReturn menuUi::run() {
     menuReturn result;
@@ -457,23 +488,41 @@ Element menuUi::renderLogo() const {
     };
     // clang-format on
 
-    // Animated RGB neon wave down logo rows
+    const auto palette = settings_.palette();
     double t = getTimeSec();
+
+    // Theme palette colors for logo wave animation
+    const std::array<Color, 6> themeColors = {
+        palette.headerTitle,
+        palette.headerBpm,
+        palette.headerClock,
+        palette.tableHeader,
+        palette.fxValue,
+        palette.fxLabel
+    };
+
     Elements lines;
+    size_t colorCount = themeColors.size();
 
     for (size_t rowIdx = 0; rowIdx < 6; ++rowIdx) {
-        double phase = t * 3.5 + rowIdx * 0.4;
-        int r = static_cast<int>(110 + 100 * std::sin(phase));
-        int g = static_cast<int>(200 + 50 * std::sin(phase + 1.5));
-        int b = static_cast<int>(220 + 35 * std::sin(phase + 3.0));
+        size_t colorIdx = static_cast<size_t>(t * 4.0 + rowIdx) % colorCount;
+        lines.push_back(text(kLogo[rowIdx]) | color(themeColors[colorIdx]) | bold);
+    }
 
-        lines.push_back(text(kLogo[rowIdx]) | color(Color::RGB(r, g, b)) | bold);
+    // Splash text with pulsating bold
+    bool isBold = std::sin(t * 6.0) > 0.0;
+    Element splashElem = text("★ " + splashText_ + " ★") | color(palette.headerBpm);
+    if (isBold) {
+        splashElem = splashElem | bold;
     }
 
     return vbox({
         text(""), // Top margin
         vbox(std::move(lines)) | hcenter,
-        text("A MIDI/SysEx visualizer, by SimTheNep") | color(settings_.palette().textDim) | hcenter,
+        hbox({splashElem}) | hcenter,
+        hbox({
+            text("A MIDI/SysEx visualizer, by SimTheNep ") | color(palette.textDim)
+        }) | hcenter,
         text("")
     });
 }
@@ -805,11 +854,8 @@ Element menuUi::renderFooter() const {
     Element tabHint = hbox({ text(" [Tab] ") | color(palette.headerClock) | bold, text("Change tabs ") | color(palette.footerText) });
     
     Element queueHint = hbox({
-        text("| [j/k] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
-        text("| [a] ") | color(palette.headerClock) | bold, text("Add ") | color(palette.footerText),
-        text("| [d] ") | color(palette.headerClock) | bold, text("Delete ") | color(palette.footerText),
-        text("| [0..F] ") | color(palette.headerClock) | bold, text("Ports ") | color(palette.footerText),
-        text("| [Enter] ") | color(palette.headerClock) | bold, text("Play ") | color(palette.footerText)
+        text("| [h/l or ←/→] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
+        text("| [a] ") | color(palette.headerClock) | bold, text("Add ") | color(palette.footerText)
     });
 
     Element settingsHint = hbox({
