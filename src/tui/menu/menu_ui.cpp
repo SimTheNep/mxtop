@@ -227,6 +227,30 @@ namespace {
         auto now = std::chrono::steady_clock::now();
         return std::chrono::duration<double>(now.time_since_epoch()).count();
     }
+
+    // Applies typewriter CRT scanline reveal transition to list of rows
+    Element scanlineTransition(Elements rows, double switchTime) {
+        double elapsed = getTimeSec() - switchTime;
+        double duration = 0.22; // 220 ms typewriter sweep
+
+        if (elapsed >= duration || rows.empty()) {
+            return vbox(std::move(rows));
+        }
+
+        double progress = std::clamp(elapsed / duration, 0.0, 1.0);
+        size_t visibleCount = static_cast<size_t>(std::ceil(progress * rows.size()));
+
+        Elements visibleRows;
+        for (size_t i = 0; i < rows.size(); ++i) {
+            if (i < visibleCount) {
+                visibleRows.push_back(std::move(rows[i]));
+            } else {
+                visibleRows.push_back(text("") | size(HEIGHT, EQUAL, 1));
+            }
+        }
+
+        return vbox(std::move(visibleRows));
+    }
 }
 
 // RUNTIME
@@ -301,7 +325,7 @@ menuReturn menuUi::run() {
                 return true;
             }
 
-            // Ctrl + W, Clear previous Word
+            // Ctrl + W, clear previous Word
             if (ev == Event::Character("\x17")) {
                 clearWord(fileInputBuf_);
                 return true;
@@ -335,6 +359,7 @@ menuReturn menuUi::run() {
         if (ev == Event::Tab) {
             activePane_ = (activePane_ == Pane::Queue) ? Pane::Settings
                 : (activePane_ == Pane::Settings) ? Pane::Help : Pane::Queue;
+            lastTabSwitchTime_ = getTimeSec(); // Record tab switch timestamp for animation
             return true;
         }
 
@@ -494,11 +519,6 @@ Element menuUi::renderQueue() const {
     const auto palette = settings_.palette();
     double t = getTimeSec();
 
-    // Breathing pulse for selection indicator
-    double pulse = 0.5 + 0.5 * std::sin(t * 5.0);
-    int pulseG = static_cast<int>(180 + 75 * pulse);
-    Color pulseColor = Color::RGB(100, pulseG, 220);
-
     Elements queueRows;
 
     if (queue_.empty() && !addingFile_) {
@@ -509,7 +529,7 @@ Element menuUi::renderQueue() const {
             const auto& item = queue_[i];
 
             Element prefix = selected
-                ? (text(" 󰐊 ") | color(pulseColor) | bold) 
+                ? (text(" 󰐊 ") | color(palette.headerTitle) | bold) 
                 : text("   ");
             
             Element num = text("[" + std::to_string(i + 1) + "] ") | color(palette.textDim);
@@ -521,11 +541,10 @@ Element menuUi::renderQueue() const {
                 name = name | color(palette.textDim);
             }
 
-            // Smooth continuous auto-scrolling for port badges on selected row
+            // Auto-scrolling for port badges
             size_t numPorts = item.ports.size();
             size_t startIdx = 0;
             if (selected && numPorts > 6) {
-                // Scroll 1 port badge every 1.2 seconds smoothly
                 startIdx = static_cast<size_t>(t / 1.2) % numPorts;
             }
 
@@ -584,10 +603,13 @@ Element menuUi::renderQueue() const {
         });
     }
 
+    // Apply transition
+    Element bodyContent = scanlineTransition(std::move(queueRows), lastTabSwitchTime_);
+
     return window(
         text(" QUEUE ") | bold,
         vbox({
-            vbox(std::move(queueRows)) | flex,
+            bodyContent | flex,
             separator() | color(palette.tableHeader),
             bottomDrawer
         })
@@ -650,12 +672,6 @@ void menuUi::cycleSettingRight() { cycleSetting(+1); }
 
 Element menuUi::renderSettings() const {
     const auto palette = settings_.palette();
-    double t = getTimeSec();
-
-    // Breathing pulse for selection indicator
-    double pulse = 0.5 + 0.5 * std::sin(t * 5.0);
-    int pulseG = static_cast<int>(180 + 75 * pulse);
-    Color pulseColor = Color::RGB(100, pulseG, 220);
 
     struct ItemDef {
         std::string section;
@@ -695,7 +711,7 @@ Element menuUi::renderSettings() const {
         bool selected = (i == settingsCursor_);
 
         Element prefixElem = selected 
-            ? (text(" ▸ ") | color(pulseColor) | bold) 
+            ? (text(" ▸ ") | color(palette.headerTitle) | bold) 
             : text("   ");
 
         Element labelElem = text(item.label) | size(WIDTH, EQUAL, 28);
@@ -722,13 +738,15 @@ Element menuUi::renderSettings() const {
         })
     });
 
+    listRows.push_back(filler());
+    listRows.push_back(hintBox);
+
+    // Apply transition
+    Element bodyContent = scanlineTransition(std::move(listRows), lastTabSwitchTime_);
+
     return window(
         text(" SETTINGS ") | bold,
-        vbox({
-            vbox(std::move(listRows)),
-            filler(),
-            hintBox
-        })
+        bodyContent
     ) | color(palette.tableHeader) | size(WIDTH, EQUAL, 74);
 }
 
@@ -771,7 +789,10 @@ Element menuUi::renderHelp() const {
         row("m + 0..9/ A..F", "mute channel toggle")
     };
 
-    return window(text(" HELP ") | bold, vbox(std::move(lines))) | color(palette.tableHeader) | size(WIDTH, EQUAL, 74);
+    // Apply transition
+    Element bodyContent = scanlineTransition(std::move(lines), lastTabSwitchTime_);
+
+    return window(text(" HELP ") | bold, bodyContent) | color(palette.tableHeader) | size(WIDTH, EQUAL, 74);
 }
 
 // FOOTER

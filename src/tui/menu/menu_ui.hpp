@@ -74,4 +74,6 @@ private:
     std::string fileInputBuf_;
 
     ftxui::ScreenInteractive screen_ = ftxui::ScreenInteractive::Fullscreen();
+
+    double lastTabSwitchTime_ = 0.0;
 };
