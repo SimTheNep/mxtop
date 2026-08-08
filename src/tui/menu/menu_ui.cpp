@@ -23,25 +23,33 @@ namespace {
     // Pick a random Minecraft-style splash text
     std::string getRandomSplashText() {
         static const std::vector<std::string> kSplashes = {
-            "Also try mxtop!",
+            // Shoutouts
+            "Also try btop!",
+            "Also try TMIDI Player!",
+            "Also try FluidSynth for soundfonts!",
+
+            // Release notes
             "Now with 100% more SysEx!",
-            "Roland SD-90 approved!",
-            "Don't feed the MIDI notes after midnight!",
-            "CC 123 All Notes Off!",
-            "May contain traces of General MIDI!",
-            "0x90 Note On!",
+            "Removed MS-DOS!",
+
+            // Protocol technical stuff
+            "0xF0 ... 0xF7!",
+            "16 channels and beyond!",
+            "Channel 10 is always percussion!",
+            "Note On with 0 velocity is just Note Off!",
+            "Hexadecimal is my favorite format!",
+
+            // Hardware & standards
+            "XG, GS, and GM2 approved!",
             "SysEx included, synths sold separately!",
-            "Powered by FTXUI & RtMidi!",
-            "16 Channels of pure chaos!",
-            "Boop beep boop!",
-            "Check out settings.toml!",
-            "Made with C++17!",
-            "No floating points were harmed!",
-            "Yamaha XG, Roland GS, or GM2?",
+            "Don't feed CC04 after midnight!",
+            "ALSA is typing...",
+
+            // Memes
+            "Black MIDI compatible! (Mostly...)",
             "Polyphony count goes brrr!",
             "Have you changed your theme today?",
-            "Buffer underrun? Never heard of her!",
-            "Press Enter to drop the beat!"
+            "Powered by FTXUI & RtMidi!"
         };
 
         std::random_device rd;
@@ -492,13 +500,12 @@ Element menuUi::renderLogo() const {
     double t = getTimeSec();
 
     // Theme palette colors for logo wave animation
-    const std::array<Color, 6> themeColors = {
-        palette.headerTitle,
+    const std::array<Color, 5> themeColors = {
+        palette.vuHigh,
         palette.headerBpm,
+        palette.headerTitle,
         palette.headerClock,
-        palette.tableHeader,
-        palette.fxValue,
-        palette.fxLabel
+        palette.headerTimeSig
     };
 
     Elements lines;
@@ -815,27 +822,27 @@ Element menuUi::renderHelp() const {
 
     Elements lines = {
         text("Queue") | color(palette.headerTitle) | bold,
-        row("j / k / ↑ ↓", "move selection up/down"),
-        row("a", "add a MIDI file to the queue"),
-        row("ctrl + d", "clear prompt text"),
-        row("ctrl + w", "clear to last /"),
-        row("0..9 / A..F", "assign ports 1..16 to the selected queue entry"),
-        row("d", "remove the selected queue entry"),
-        row("Enter", "start playback"),
+        row("   j / k / ↑ ↓", "move selection up/down"),
+        row("   a", "add a MIDI file to the queue"),
+        row("   ctrl + d", "clear prompt text"),
+        row("   ctrl + w", "clear to last /"),
+        row("   0..9 / A..F", "assign ports 1..16 to the selected queue entry"),
+        row("   d", "remove the selected queue entry"),
+        row("   Enter", "start playback"),
         text(""),
         text("Settings") | color(palette.headerTitle) | bold,
-        row("j / k / ↑ ↓", "move selection up/down"),
-        row("h / l / ← →", "change selected setting value"),
+        row("   j / k / ↑ ↓", "move selection up/down"),
+        row("   h / l / ← →", "change selected setting value"),
         row("Space / Enter", "cycle selected setting forward"),
         text(""),
-        text("Playback") | color(palette.headerTitle) | bold,
-        row("h / l / ← →", "cycle port pages"),
-        row("j / k / ↑ ↓", "cycle through the queue"),
-        row("x", "stop playback"),
-        row("p", "panic"),
-        row("r", "restart the current file"),
-        row("s + 0..9 / A..F", "solo channel toggle"),
-        row("m + 0..9/ A..F", "mute channel toggle")
+        text("  Playback") | color(palette.headerTitle) | bold,
+        row("   h / l / ← →", "cycle port pages"),
+        row("   j / k / ↑ ↓", "cycle through the queue"),
+        row("   x", "stop playback"),
+        row("   p", "panic"),
+        row("   r", "restart the current file"),
+        row("   s + 0..9 / A..F", "solo channel toggle"),
+        row("   m + 0..9/ A..F", "mute channel toggle")
     };
 
     // Apply transition
@@ -854,7 +861,7 @@ Element menuUi::renderFooter() const {
     Element tabHint = hbox({ text(" [Tab] ") | color(palette.headerClock) | bold, text("Change tabs ") | color(palette.footerText) });
     
     Element queueHint = hbox({
-        text("| [h/l or ←/→] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
+        text("| [j/k or ↑/↓] ") | color(palette.headerClock) | bold, text("Move ") | color(palette.footerText),
         text("| [a] ") | color(palette.headerClock) | bold, text("Add ") | color(palette.footerText)
     });
 
