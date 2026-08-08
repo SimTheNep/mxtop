@@ -1,0 +1,49 @@
+/* Edirol SD-90 Studio Canvas Blue LCD (Inverted) */
+:root {
+  /* Global & Structural */
+  --background: #3642fb;
+  --panel-border: #d4dafd;
+  --text-primary: #d4dafd;
+  --text-dim: #808cd4;
+  --footer-text: #808cd4;
+
+  /* Header & Titles */
+  --header-title: #d4dafd;
+  --header-bpm: #d4dafd;
+  --header-timesig: #d4dafd;
+  --header-clock: #d4dafd;
+  --header-status: #d4dafd;
+
+  /* Channel Table */
+  --table-header: #d4dafd;
+  --channel-active: #d4dafd;
+  --channel-inactive: #808cd4;
+
+  /* VU Meters */
+  --vu-low: #d4dafd;
+  --vu-mid: #d4dafd;
+  --vu-high: #ffffff;
+  --vu-peak: #ffffff;
+
+  /* System FX & Master Out */
+  --fx-label: #d4dafd;
+  --fx-value: #d4dafd;
+  --master-label: #d4dafd;
+  --master-value: #d4dafd;
+
+  /* Event Log */
+  --log-sysex: #ffffff;
+  --log-pc: #d4dafd;
+  --log-cc: #d4dafd;
+  --log-tempo: #d4dafd;
+  --log-timesig: #d4dafd;
+
+  /* Activity Grid */
+  --activity-badge: #d4dafd;
+  --activity-chord: #d4dafd;
+
+  /* System Load */
+  --load-poly: #d4dafd;
+  --load-ram: #d4dafd;
+  --load-cpu: #d4dafd;
+}

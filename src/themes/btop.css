@@ -1,0 +1,49 @@
+/* Official btop++ Theme */
+:root {
+  /* Global & Structural */
+  --background: #121314;
+  --panel-border: #3b4252;
+  --text-primary: #c5c8c6;
+  --text-dim: #4c566a;
+  --footer-text: #4c566a;
+
+  /* Header & Titles */
+  --header-title: #80b271;
+  --header-bpm: #ebcb8b;
+  --header-timesig: #88c0d0;
+  --header-clock: #5778c1;
+  --header-status: #80b271;
+
+  /* Channel Table */
+  --table-header: #5778c1;
+  --channel-active: #80b271;
+  --channel-inactive: #4c566a;
+
+  /* VU Meters */
+  --vu-low: #80b271;
+  --vu-mid: #ebcb8b;
+  --vu-high: #bf616a;
+  --vu-peak: #e5e9f0;
+
+  /* System FX & Master Out */
+  --fx-label: #9478aa;
+  --fx-value: #80b271;
+  --master-label: #d57b56;
+  --master-value: #c5c8c6;
+
+  /* Event Log */
+  --log-sysex: #bf616a;
+  --log-pc: #80b271;
+  --log-cc: #ebcb8b;
+  --log-tempo: #d57b56;
+  --log-timesig: #88c0d0;
+
+  /* Activity Grid */
+  --activity-badge: #88c0d0;
+  --activity-chord: #9478aa;
+
+  /* System Load */
+  --load-poly: #80b271;
+  --load-ram: #ebcb8b;
+  --load-cpu: #5778c1;
+}

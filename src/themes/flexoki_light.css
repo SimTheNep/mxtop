@@ -1,0 +1,34 @@
+/* Flexoki Light */
+:root {
+  --background: #fffcf0;
+  --panel-border: #e6e4d9;
+  --text-primary: #101010;
+  --text-dim: #878580;
+  --footer-text: #878580;
+  --header-title: #667526;
+  --header-bpm: #ad8301;
+  --header-timesig: #176d65;
+  --header-clock: #1a4f8a;
+  --header-status: #667526;
+  --table-header: #1a4f8a;
+  --channel-active: #667526;
+  --channel-inactive: #878580;
+  --vu-low: #667526;
+  --vu-mid: #ad8301;
+  --vu-high: #af3029;
+  --vu-peak: #101010;
+  --fx-label: #87235a;
+  --fx-value: #667526;
+  --master-label: #bc5215;
+  --master-value: #101010;
+  --log-sysex: #af3029;
+  --log-pc: #667526;
+  --log-cc: #ad8301;
+  --log-tempo: #bc5215;
+  --log-timesig: #87235a;
+  --activity-badge: #176d65;
+  --activity-chord: #87235a;
+  --load-poly: #667526;
+  --load-ram: #ad8301;
+  --load-cpu: #1a4f8a;
+}

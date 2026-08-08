@@ -1,0 +1,49 @@
+/* Roland Sound Canvas Amber LCD (Inverted) */
+:root {
+  /* Global & Structural */
+  --background: #000000;
+  --panel-border: #f08400;
+  --text-primary: #f08400;
+  --text-dim: #804600;
+  --footer-text: #804600;
+
+  /* Header & Titles */
+  --header-title: #f08400;
+  --header-bpm: #f08400;
+  --header-timesig: #f08400;
+  --header-clock: #f08400;
+  --header-status: #f08400;
+
+  /* Channel Table */
+  --table-header: #f08400;
+  --channel-active: #f08400;
+  --channel-inactive: #804600;
+
+  /* VU Meters */
+  --vu-low: #f08400;
+  --vu-mid: #f08400;
+  --vu-high: #f08400;
+  --vu-peak: #f08400;
+
+  /* System FX & Master Out */
+  --fx-label: #f08400;
+  --fx-value: #f08400;
+  --master-label: #f08400;
+  --master-value: #f08400;
+
+  /* Event Log */
+  --log-sysex: #f08400;
+  --log-pc: #f08400;
+  --log-cc: #f08400;
+  --log-tempo: #f08400;
+  --log-timesig: #f08400;
+
+  /* Activity Grid */
+  --activity-badge: #f08400;
+  --activity-chord: #f08400;
+
+  /* System Load */
+  --load-poly: #f08400;
+  --load-ram: #f08400;
+  --load-cpu: #f08400;
+}

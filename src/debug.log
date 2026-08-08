@@ -1,3 +1,12 @@
+[main] CLI parsed: 1 file(s), 2 port(s)
+[main] Opened output port [1]: SD-90:SD-90 Part A 24:0
+[main] Opened output port [2]: SD-90:SD-90 Part B 24:1
+[parser_module] Loaded module 'Roland GS' (gs) with 30 object(s)
+[parser_module] Loaded module 'Yamaha XGlite' (xg) with 28 object(s)
+[parser_module] Loaded module 'Edirol SD-90' (sd90) with 32 object(s)
+[parser_module] Loaded module 'General MIDI 2' (gm2) with 20 object(s)
+[midi_load] Successfully loaded file [1/1]: /home/sam/Downloads/MIDIs/hr01_13-SD90.mid
+[midi_load] Metadata -> Title: 'SD-90', BPM: 134.00, TimeSig: 4/4, Duration: 273386.80 ms
 [midi_load] track 0 -> port 0
 [midi_load] track 1 -> port 0
 [midi_load] track 2 -> port 0
@@ -13,5 +22,184 @@
 [midi_load] track 12 -> port 0
 [midi_load] track 13 -> port 0
 [midi_load] track 14 -> port 0
-[midi_load] track 15 -> port 0
-[midi_load] track 16 -> port 0
+[main] auto-selected module: ../modules/sd-90
+[parser_module] Loaded module 'Edirol SD-90' (sd90) with 32 object(s)
+[parser_dictionary] Parsed 8 enum(s), 2 bank group(s), 0 efx flag set(s)
+[main] Successfully loaded module 'Edirol SD-90' (sd90) from '../modules/sd-90'
+[state_const] Channel 9 set to Rhythm mode from bank defaults
+[state_const] stateLayer initialized for 'Edirol SD-90': 32 objects, 91 sysex bindings, 48 patch-sysex bindings
+[main] Starting playback loop...
+[state_events] Ch 01 -> Bank Select CC0 = 98
+[state_events] Ch 01 -> Program Change: 4
+[state_events] Ch 01 -> Bank Select CC0 = 98
+[state_events] Ch 01 -> Program Change: 4
+[state_events] Ch 01 -> Bank Select CC0 = 98
+[state_events] Ch 01 -> Program Change: 4
+[state_events] Ch 02 -> Bank Select CC0 = 98
+[state_events] Ch 02 -> Program Change: 2
+[state_events] Ch 02 -> Bank Select CC0 = 98
+[state_events] Ch 02 -> Program Change: 2
+[state_events] Ch 02 -> Bank Select CC0 = 98
+[state_events] Ch 02 -> Program Change: 2
+[state_events] Ch 04 -> Bank Select CC0 = 97
+[state_events] Ch 04 -> Program Change: 2
+[state_events] Ch 04 -> Bank Select CC0 = 97
+[state_events] Ch 04 -> Program Change: 2
+[state_events] Ch 04 -> Bank Select CC0 = 97
+[state_events] Ch 04 -> Program Change: 2
+[state_events] Ch 05 -> Bank Select CC0 = 96
+[state_events] Ch 05 -> Program Change: 2
+[state_events] Ch 05 -> Bank Select CC0 = 96
+[state_events] Ch 05 -> Program Change: 2
+[state_events] Ch 05 -> Bank Select CC0 = 96
+[state_events] Ch 05 -> Program Change: 2
+[state_events] Ch 10 -> Bank Select CC0 = 106
+[state_events] Ch 10 switched to Rhythm mode via MSB 106
+[state_events] Ch 10 -> Program Change: 17
+[state_events] Ch 10 -> Bank Select CC0 = 106
+[state_events] Ch 10 switched to Rhythm mode via MSB 106
+[state_events] Ch 10 -> Program Change: 17
+[state_events] Ch 10 -> Bank Select CC0 = 106
+[state_events] Ch 10 switched to Rhythm mode via MSB 106
+[state_events] Ch 10 -> Program Change: 17
+[state_events] Ch 06 -> Bank Select CC0 = 98
+[state_events] Ch 06 -> Program Change: 49
+[state_events] Ch 06 -> Bank Select CC0 = 98
+[state_events] Ch 06 -> Program Change: 49
+[state_events] Ch 06 -> Bank Select CC0 = 98
+[state_events] Ch 06 -> Program Change: 49
+[state_events] Ch 07 -> Bank Select CC0 = 98
+[state_events] Ch 07 -> Program Change: 57
+[state_events] Ch 07 -> Bank Select CC0 = 98
+[state_events] Ch 07 -> Program Change: 57
+[state_events] Ch 07 -> Bank Select CC0 = 98
+[state_events] Ch 07 -> Program Change: 57
+[state_events] Ch 08 -> Bank Select CC0 = 97
+[state_events] Ch 08 -> Bank Select CC32 = 1
+[state_events] Ch 08 -> Program Change: 62
+[state_events] Ch 08 -> Bank Select CC0 = 97
+[state_events] Ch 08 -> Bank Select CC32 = 1
+[state_events] Ch 08 -> Program Change: 62
+[state_events] Ch 08 -> Bank Select CC0 = 97
+[state_events] Ch 08 -> Bank Select CC32 = 1
+[state_events] Ch 08 -> Program Change: 62
+[state_events] Ch 09 -> Bank Select CC0 = 97
+[state_events] Ch 09 -> Program Change: 9
+[state_events] Ch 09 -> Bank Select CC0 = 97
+[state_events] Ch 09 -> Program Change: 9
+[state_events] Ch 09 -> Bank Select CC0 = 97
+[state_events] Ch 09 -> Program Change: 9
+[state_events] Ch 11 -> Bank Select CC0 = 98
+[state_events] Ch 11 -> Program Change: 77
+[state_events] Ch 11 -> Bank Select CC0 = 98
+[state_events] Ch 11 -> Program Change: 77
+[state_events] Ch 11 -> Bank Select CC0 = 98
+[state_events] Ch 11 -> Program Change: 77
+[state_events] Ch 12 -> Bank Select CC0 = 98
+[state_events] Ch 12 -> Program Change: 37
+[state_events] Ch 12 -> Bank Select CC0 = 98
+[state_events] Ch 12 -> Program Change: 37
+[state_events] Ch 12 -> Bank Select CC0 = 98
+[state_events] Ch 12 -> Program Change: 37
+[state_events] Ch 13 -> Bank Select CC0 = 97
+[state_events] Ch 13 -> Program Change: 37
+[state_events] Ch 13 -> Bank Select CC0 = 97
+[state_events] Ch 13 -> Program Change: 37
+[state_events] Ch 13 -> Bank Select CC0 = 97
+[state_events] Ch 13 -> Program Change: 37
+[state_sysex] Parameter 'chorus' set to raw 1 on Ch -1 via SysEx (Addr: 0x10000200)
+[state_sysex] Parameter 'reverb' set to raw 3 on Ch -1 via SysEx (Addr: 0x10000400)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 0 via SysEx (Addr: 0x10002009)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 0 via SysEx (Addr: 0x10002015)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 0 via SysEx (Addr: 0x10002015)
+[state_sysex] Parameter 'output_assign' set to raw 13 on Ch 0 via SysEx (Addr: 0x1000201F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 0 via SysEx (Addr: 0x10002020)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 1 via SysEx (Addr: 0x10002109)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 1 via SysEx (Addr: 0x10002115)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 1 via SysEx (Addr: 0x10002115)
+[state_sysex] Parameter 'output_assign' set to raw 13 on Ch 1 via SysEx (Addr: 0x1000211F)
+[state_sysex] Parameter 'mfx' set to raw 1 on Ch 1 via SysEx (Addr: 0x10002120)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 2 via SysEx (Addr: 0x10002209)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 2 via SysEx (Addr: 0x10002215)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 2 via SysEx (Addr: 0x10002215)
+[state_sysex] Parameter 'output_assign' set to raw 0 on Ch 2 via SysEx (Addr: 0x1000221F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 2 via SysEx (Addr: 0x10002220)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 3 via SysEx (Addr: 0x10002309)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 3 via SysEx (Addr: 0x10002315)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 3 via SysEx (Addr: 0x10002315)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 3 via SysEx (Addr: 0x1000231F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 3 via SysEx (Addr: 0x10002320)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 4 via SysEx (Addr: 0x10002409)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 4 via SysEx (Addr: 0x10002415)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 4 via SysEx (Addr: 0x10002415)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 4 via SysEx (Addr: 0x1000241F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 4 via SysEx (Addr: 0x10002420)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 5 via SysEx (Addr: 0x10002509)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 5 via SysEx (Addr: 0x10002515)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 5 via SysEx (Addr: 0x10002515)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 5 via SysEx (Addr: 0x1000251F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 5 via SysEx (Addr: 0x10002520)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 6 via SysEx (Addr: 0x10002609)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 6 via SysEx (Addr: 0x10002615)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 6 via SysEx (Addr: 0x10002615)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 6 via SysEx (Addr: 0x1000261F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 6 via SysEx (Addr: 0x10002620)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 7 via SysEx (Addr: 0x10002709)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 7 via SysEx (Addr: 0x10002715)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 7 via SysEx (Addr: 0x10002715)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 7 via SysEx (Addr: 0x1000271F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 7 via SysEx (Addr: 0x10002720)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 8 via SysEx (Addr: 0x10002809)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 8 via SysEx (Addr: 0x10002815)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 8 via SysEx (Addr: 0x10002815)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 8 via SysEx (Addr: 0x1000281F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 8 via SysEx (Addr: 0x10002820)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 9 via SysEx (Addr: 0x10002909)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 9 via SysEx (Addr: 0x10002915)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 9 via SysEx (Addr: 0x10002915)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 9 via SysEx (Addr: 0x1000291F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 9 via SysEx (Addr: 0x10002920)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 10 via SysEx (Addr: 0x10002A09)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 10 via SysEx (Addr: 0x10002A15)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 10 via SysEx (Addr: 0x10002A15)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 10 via SysEx (Addr: 0x10002A1F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 10 via SysEx (Addr: 0x10002A20)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 11 via SysEx (Addr: 0x10002B09)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 11 via SysEx (Addr: 0x10002B15)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 11 via SysEx (Addr: 0x10002B15)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 11 via SysEx (Addr: 0x10002B1F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 11 via SysEx (Addr: 0x10002B20)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 12 via SysEx (Addr: 0x10002C09)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 12 via SysEx (Addr: 0x10002C15)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 12 via SysEx (Addr: 0x10002C15)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 12 via SysEx (Addr: 0x10002C1F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 12 via SysEx (Addr: 0x10002C20)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 13 via SysEx (Addr: 0x10002D09)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 13 via SysEx (Addr: 0x10002D15)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 13 via SysEx (Addr: 0x10002D15)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 13 via SysEx (Addr: 0x10002D1F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 13 via SysEx (Addr: 0x10002D20)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 14 via SysEx (Addr: 0x10002E09)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 14 via SysEx (Addr: 0x10002E15)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 14 via SysEx (Addr: 0x10002E15)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 14 via SysEx (Addr: 0x10002E1F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 14 via SysEx (Addr: 0x10002E20)
+[state_sysex] Parameter 'part_tune' set to raw 64 on Ch 15 via SysEx (Addr: 0x10002F09)
+[state_sysex] Parameter 'rhythm_part' set to raw 64 on Ch 15 via SysEx (Addr: 0x10002F15)
+[state_sysex] Parameter 'gm2_drum_part' set to raw 64 on Ch 15 via SysEx (Addr: 0x10002F15)
+[state_sysex] Parameter 'output_assign' set to raw 1 on Ch 15 via SysEx (Addr: 0x10002F1F)
+[state_sysex] Parameter 'mfx' set to raw 0 on Ch 15 via SysEx (Addr: 0x10002F20)
+[state_sysex] Parameter 'mfx_a' set to raw 17 on Ch -1 via SysEx (Addr: 0x11000600)
+[state_sysex] Parameter 'mfx_b' set to raw 0 on Ch -1 via SysEx (Addr: 0x11200600)
+[ui_model] Terminal size changed to 169x15. Switching layout profile: 'full' -> 'tiny'
+[state_sysex] Parameter 'mfx_c' set to raw 0 on Ch -1 via SysEx (Addr: 0x11400600)
+[ui_model] Terminal size changed to 73x15. Switching layout profile: 'tiny' -> 'too_small'
+[ui_model] Terminal size changed to 78x15. Switching layout profile: 'too_small' -> 'tiny'
+[ui_model] Terminal size changed to 75x15. Switching layout profile: 'tiny' -> 'too_small'
+[ui_model] Terminal size changed to 78x40. Switching layout profile: 'too_small' -> 'tiny'
+[ui_model] Terminal size changed to 165x42. Switching layout profile: 'tiny' -> 'full'
+[ui_model] Terminal size changed to 158x43. Switching layout profile: 'full' -> 'tiny'
+[ui_model] Terminal size changed to 161x43. Switching layout profile: 'tiny' -> 'full'
+[ui_model] Terminal size changed to 158x43. Switching layout profile: 'full' -> 'tiny'
+[ui_model] Terminal size changed to 161x43. Switching layout profile: 'tiny' -> 'full'
+[main] Playback ended at t=24404.60 ms. Cleaning up...

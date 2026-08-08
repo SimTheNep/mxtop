@@ -6,7 +6,7 @@
 
 // PARSER_DEBUG.CPP
 //
-// Debug utilis
+// Debug utils
 
 using json = nlohmann::json;
 
@@ -16,13 +16,20 @@ void debugLayouts(const layoutDef& layouts) {
         printf("Display: %s\n", variantName.c_str());
 
         for (const auto& [sectionName, section] : variant.views) {
-            printf("    Parameter: %s\n", sectionName.c_str());
-            for (const auto& id : section.items) { printf("        %s\n", id.c_str()); }
+            printf("    Parameter Section: %s\n", sectionName.c_str());
+            for (const auto& col : section.columns) {
+                printf("        Column label: %s\n", col.label.c_str());
+                for (const auto& field : col.fields) {
+                    printf("            Field: %s\n", field.c_str());
+                }
+            }
         }
 
-        for (const auto& [sectionName, section] : variant.widgets) {
-            printf("    Widget: %s\n", sectionName.c_str());
-            for (const auto& id : section.items) { printf("        %s\n", id.c_str()); }
+        for (const auto& [sectionName, widgetList] : variant.widgets) {
+            printf("    Widget Section: %s\n", sectionName.c_str());
+            for (const auto& item : widgetList) {
+                printf("        %s\n", item.c_str());
+            }
         }
     }
 }

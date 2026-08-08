@@ -1,6 +1,7 @@
 #include "midi_reader/midi_load.hpp"
 #include "midi_reader/types.hpp"
 #include "tui/debug/debug_ui.hpp"
+#include "tui/ui_main.hpp"
 #include "json_parser/parser.hpp"
 #include "state_layer/state.hpp"
 #include "log.hpp"
@@ -80,9 +81,14 @@ int main(int argc, char** argv) {
     app.add_option("-p,--port", ports, "Output port per file, same argument order as --file")->required(false);
     app.add_flag("--debug", debug, "Print the MIDI reader script's direct event table instead of the GUI");
     app.add_flag("--list-outptPorts", listOuts, "List available MIDI output outptPorts");
-    app.add_option("-m,--module", moduleFolder, "Module folder (module.json/dictionary.json) - only needed for state layer debug view")->required(false);
+    app.add_option("-m,--module", moduleFolder, "Module folder (module.json/dictionary.json/layouts.json)")->required(false);
 
     CLI11_PARSE(app, argc, argv); // argument call
+    
+    logDbg("[main] CLI parsed: %zu file(s), %zu port(s)", inptFiles.size(), ports.size());
+    if (!moduleFolder.empty()) {
+        logDbg("[main] User specified module override folder: %s", moduleFolder.c_str());
+    }
 
     // Print list outptPorts... simple
     if (listOuts) {
@@ -128,12 +134,15 @@ int main(int argc, char** argv) {
         out->openPort(ports[i]);
         portNames.push_back(out->getPortName(ports[i]));
         outs.push_back(std::move(out));
+
+        logDbg("[main] Opened output port [%u]: %s", ports[i], portNames.back().c_str());
     }
 
     // DEBUG MODE CHOICE
     bool useStateLayer = false;
     moduleDef module;
     dictionaryDef dictionary;
+    layoutDef layouts;
 
     // MIDI reader invoc
     MidiReader reader;
@@ -166,31 +175,37 @@ int main(int argc, char** argv) {
 
     if (debug) {
         useStateLayer = statePrompt();
+    } else {
+        useStateLayer = true; // Always enable state layer for TUI visualizer
+    }
 
-        if (useStateLayer) {
-            if (moduleFolder.empty()) {
-                auto folder = reader.detectedModuleFolder();
+    if (useStateLayer) {
+        if (moduleFolder.empty()) {
+            auto folder = reader.detectedModuleFolder();
 
-                if (folder) {
-                    moduleFolder = *folder;
-                    logDbg("[main] auto-selected module: " + moduleFolder);
-                } else {
-                    moduleFolder = "../modules/gm2"; 
-                    logDbg("[main] auto-selected module: " + moduleFolder);
-                }
+            if (folder) {
+                moduleFolder = *folder;
+                logDbg("[main] auto-selected module: " + moduleFolder);
+            } else {
+                moduleFolder = "../modules/sd-90"; 
+                logDbg("[main] auto-selected module: " + moduleFolder);
             }
+        }
 
-            try {
-                module = parseModule(loadJsonFile(moduleFolder + "/module.json"));
-                dictionary = parseDictionary(loadJsonFile(moduleFolder + "/dictionary.json"));
-            }
-            catch (const std::exception& e) {
-                std::fprintf(stderr,
-                    "failed to load module \"%s\": %s\n",
-                    moduleFolder.c_str(),
-                    e.what());
-                return 1;
-            }
+        try {
+            module = parseModule(loadJsonFile(moduleFolder + "/module.json"));
+            dictionary = parseDictionary(loadJsonFile(moduleFolder + "/dictionary.json"));
+            layouts = parseLayouts(loadJsonFile(moduleFolder + "/layouts.json"));
+
+            logDbg("[main] Successfully loaded module '%s' (%s) from '%s'",
+                module.name.c_str(), module.id.c_str(), moduleFolder.c_str());
+        }
+        catch (const std::exception& e) {
+            std::fprintf(stderr,
+                "failed to load module folder \"%s\": %s\n",
+                moduleFolder.c_str(),
+                e.what());
+            return 1;
         }
     }
 
@@ -198,7 +213,7 @@ int main(int argc, char** argv) {
         std::printf("Loading %zu file(s)...\n", inptFiles.size());
     }
 
-    // Only built in state mode (translates messages to module/dictionary json data)
+    // State mode translator
     std::unique_ptr<stateLayer> state;
     if (useStateLayer) {
         state = std::make_unique<stateLayer>(module, dictionary, reader);
@@ -207,8 +222,16 @@ int main(int argc, char** argv) {
     // Register AFTER loading
     std::signal(SIGINT, handleSignal);
 
-    // Debug UI invoc
-    MidiUi ui(inptFiles, portNames);
+    // TUI or Debug UI invoc
+    std::unique_ptr<MidiUi> ui;
+    std::unique_ptr<DebugUi> debugUi;
+
+    if (!debug) {
+        ui = std::make_unique<MidiUi>(layouts, module, reader.metadata());
+        ui->start();
+    } else {
+        debugUi = std::make_unique<DebugUi>(inptFiles, portNames);
+    }
 
     auto initTime = std::chrono::steady_clock::now();
     std::vector<RawEvent> dataDump;
@@ -216,6 +239,9 @@ int main(int argc, char** argv) {
     const auto uiFrameInterval = std::chrono::microseconds(16667); // ~60 fps
 
 // PLAYBACK LOOP
+
+    logDbg("[main] Starting playback loop...");
+
     while (running && reader.hasMoreEvents()) {
 
         tCount = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - initTime).count(); // Time count from playback
@@ -243,13 +269,19 @@ int main(int argc, char** argv) {
                     sawStateLayer = true;
                     state->eventHandler(ev);
 
+                    if (ui) {
+                        ui->addEvent(ev);
+                    }
+
                     if (ev.kind == MsgKind::SysEx) {
                         sawSysEx = true;
                     } else if (ev.channel >= 0) {
                         touchedChannels.insert(ev.channel);
                     }
-                } else {
-                    ui.addEvent(ev);
+                }
+
+                if (debugUi && !useStateLayer) {
+                    debugUi->addEvent(ev);
                 }
             }
 
@@ -259,17 +291,21 @@ int main(int argc, char** argv) {
                 if (now - lastUiFrame >= uiFrameInterval) {
                     lastUiFrame = now;
 
-                    ui.addSnap(-1, state->snapshot(-1), tCount);
+                    if (ui) {
+                        ui->addSnap(-1, state->snapshot(-1), tCount);
 
-                    if (sawSysEx) {
+                        // Always push snapshots for all channels so VU meters and note decays update every frame
                         for (int ch : state->activeCh()) {
                             if (ch >= 0) {
-                                ui.addSnap(ch, state->snapshot(ch), tCount);
+                                ui->addSnap(ch, state->snapshot(ch), tCount);
                             }
                         }
-                    } else {
-                        for (int ch : touchedChannels) {
-                            ui.addSnap(ch, state->snapshot(ch), tCount);
+                    }
+
+                    if (debugUi) {
+                        debugUi->addSnap(-1, state->snapshot(-1), tCount);
+                        for (int ch : state->activeCh()) {
+                            debugUi->addSnap(ch, state->snapshot(ch), tCount);
                         }
                     }
                 }
@@ -279,6 +315,12 @@ int main(int argc, char** argv) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     } // playback loop end
+
+    if (ui) {
+        ui->stop();
+    }
+
+    logDbg("[main] Playback ended at t=%.2f ms. Cleaning up...", tCount);
 
     // PANIC (Cleanup)
     for (size_t i = 0; i < outs.size(); ++i) {

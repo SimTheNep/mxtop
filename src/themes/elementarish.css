@@ -1,0 +1,34 @@
+/* Elementarish */
+:root {
+  --background: #202020;
+  --panel-border: #353535;
+  --text-primary: #f0f0f0;
+  --text-dim: #666666;
+  --footer-text: #666666;
+  --header-title: #64b5f6;
+  --header-bpm: #fff176;
+  --header-timesig: #4dd0e1;
+  --header-clock: #7986cb;
+  --header-status: #64b5f6;
+  --table-header: #7986cb;
+  --channel-active: #64b5f6;
+  --channel-inactive: #666666;
+  --vu-low: #64b5f6;
+  --vu-mid: #fff176;
+  --vu-high: #e57373;
+  --vu-peak: #f0f0f0;
+  --fx-label: #ba68c8;
+  --fx-value: #64b5f6;
+  --master-label: #ffb74d;
+  --master-value: #f0f0f0;
+  --log-sysex: #e57373;
+  --log-pc: #64b5f6;
+  --log-cc: #fff176;
+  --log-tempo: #ffb74d;
+  --log-timesig: #ba68c8;
+  --activity-badge: #4dd0e1;
+  --activity-chord: #ba68c8;
+  --load-poly: #64b5f6;
+  --load-ram: #fff176;
+  --load-cpu: #7986cb;
+}

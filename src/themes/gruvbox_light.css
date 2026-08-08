@@ -1,0 +1,34 @@
+/* Gruvbox Light */
+:root {
+  --background: #fbf1c7;
+  --panel-border: #d5c4a1;
+  --text-primary: #3c3836;
+  --text-dim: #928374;
+  --footer-text: #928374;
+  --header-title: #79740e;
+  --header-bpm: #b57614;
+  --header-timesig: #427b58;
+  --header-clock: #076678;
+  --header-status: #79740e;
+  --table-header: #076678;
+  --channel-active: #79740e;
+  --channel-inactive: #928374;
+  --vu-low: #79740e;
+  --vu-mid: #b57614;
+  --vu-high: #9d0006;
+  --vu-peak: #3c3836;
+  --fx-label: #8f3f71;
+  --fx-value: #79740e;
+  --master-label: #af3a03;
+  --master-value: #3c3836;
+  --log-sysex: #9d0006;
+  --log-pc: #79740e;
+  --log-cc: #b57614;
+  --log-tempo: #af3a03;
+  --log-timesig: #8f3f71;
+  --activity-badge: #427b58;
+  --activity-chord: #8f3f71;
+  --load-poly: #79740e;
+  --load-ram: #b57614;
+  --load-cpu: #076678;
+}

@@ -13,6 +13,7 @@ enum class MsgKind {
     ChannelAftertouch,
     PitchBend,
     SysEx,
+    Meta,
     Unknown
 };
 

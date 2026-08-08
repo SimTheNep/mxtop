@@ -1,0 +1,34 @@
+/* Horizon Dark */
+:root {
+  --background: #1c1e26;
+  --panel-border: #2e303e;
+  --text-primary: #e06c75;
+  --text-dim: #6c6f93;
+  --footer-text: #6c6f93;
+  --header-title: #09f7a0;
+  --header-bpm: #fab795;
+  --header-timesig: #25b0c8;
+  --header-clock: #26bbd9;
+  --header-status: #09f7a0;
+  --table-header: #26bbd9;
+  --channel-active: #09f7a0;
+  --channel-inactive: #6c6f93;
+  --vu-low: #09f7a0;
+  --vu-mid: #fab795;
+  --vu-high: #e95678;
+  --vu-peak: #ffffff;
+  --fx-label: #b4637a;
+  --fx-value: #09f7a0;
+  --master-label: #fab795;
+  --master-value: #e06c75;
+  --log-sysex: #e95678;
+  --log-pc: #09f7a0;
+  --log-cc: #fab795;
+  --log-tempo: #fab795;
+  --log-timesig: #b4637a;
+  --activity-badge: #25b0c8;
+  --activity-chord: #b4637a;
+  --load-poly: #09f7a0;
+  --load-ram: #fab795;
+  --load-cpu: #26bbd9;
+}

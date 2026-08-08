@@ -1,0 +1,34 @@
+/* Tomorrow Night */
+:root {
+  --background: #1d1f21;
+  --panel-border: #373b41;
+  --text-primary: #c5c8c6;
+  --text-dim: #969896;
+  --footer-text: #969896;
+  --header-title: #b5bd68;
+  --header-bpm: #f0c674;
+  --header-timesig: #8abeb7;
+  --header-clock: #81a2be;
+  --header-status: #b5bd68;
+  --table-header: #81a2be;
+  --channel-active: #b5bd68;
+  --channel-inactive: #969896;
+  --vu-low: #b5bd68;
+  --vu-mid: #f0c674;
+  --vu-high: #cc6666;
+  --vu-peak: #c5c8c6;
+  --fx-label: #b294bb;
+  --fx-value: #b5bd68;
+  --master-label: #de935f;
+  --master-value: #c5c8c6;
+  --log-sysex: #cc6666;
+  --log-pc: #b5bd68;
+  --log-cc: #f0c674;
+  --log-tempo: #de935f;
+  --log-timesig: #b294bb;
+  --activity-badge: #8abeb7;
+  --activity-chord: #b294bb;
+  --load-poly: #b5bd68;
+  --load-ram: #f0c674;
+  --load-cpu: #81a2be;
+}

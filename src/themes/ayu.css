@@ -1,0 +1,34 @@
+/* Ayu Dark */
+:root {
+  --background: #0f1419;
+  --panel-border: #242936;
+  --text-primary: #e6b450;
+  --text-dim: #424a5d;
+  --footer-text: #424a5d;
+  --header-title: #aad94c;
+  --header-bpm: #ffb454;
+  --header-timesig: #95e6cb;
+  --header-clock: #59c2ff;
+  --header-status: #aad94c;
+  --table-header: #59c2ff;
+  --channel-active: #aad94c;
+  --channel-inactive: #424a5d;
+  --vu-low: #aad94c;
+  --vu-mid: #ffb454;
+  --vu-high: #ff3333;
+  --vu-peak: #e6b450;
+  --fx-label: #d2a6ff;
+  --fx-value: #aad94c;
+  --master-label: #ffb454;
+  --master-value: #e6b450;
+  --log-sysex: #ff3333;
+  --log-pc: #aad94c;
+  --log-cc: #ffb454;
+  --log-tempo: #ffb454;
+  --log-timesig: #d2a6ff;
+  --activity-badge: #95e6cb;
+  --activity-chord: #d2a6ff;
+  --load-poly: #aad94c;
+  --load-ram: #ffb454;
+  --load-cpu: #59c2ff;
+}

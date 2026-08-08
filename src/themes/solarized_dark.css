@@ -1,0 +1,34 @@
+/* Solarized Dark */
+:root {
+  --background: #002b36;
+  --panel-border: #073642;
+  --text-primary: #eee8d5;
+  --text-dim: #586e75;
+  --footer-text: #586e75;
+  --header-title: #859900;
+  --header-bpm: #b58900;
+  --header-timesig: #2aa198;
+  --header-clock: #268bd2;
+  --header-status: #859900;
+  --table-header: #268bd2;
+  --channel-active: #859900;
+  --channel-inactive: #586e75;
+  --vu-low: #859900;
+  --vu-mid: #b58900;
+  --vu-high: #dc322f;
+  --vu-peak: #fdf6e3;
+  --fx-label: #6c71c4;
+  --fx-value: #859900;
+  --master-label: #cb4b16;
+  --master-value: #eee8d5;
+  --log-sysex: #dc322f;
+  --log-pc: #859900;
+  --log-cc: #b58900;
+  --log-tempo: #cb4b16;
+  --log-timesig: #6c71c4;
+  --activity-badge: #2aa198;
+  --activity-chord: #6c71c4;
+  --load-poly: #859900;
+  --load-ram: #b58900;
+  --load-cpu: #268bd2;
+}

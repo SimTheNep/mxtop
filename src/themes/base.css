@@ -1,0 +1,49 @@
+/* Base Theme */
+:root {
+  /* Global & Structural */
+  --background: #1a1b26;
+  --panel-border: #292e42;
+  --text-primary: #c0caf5;
+  --text-dim: #565f89;
+  --footer-text: #565f89;
+
+  /* Header & Titles */
+  --header-title: #9ece6a;
+  --header-bpm: #e0af68;
+  --header-timesig: #bb9af7;
+  --header-clock: #7dcfff;
+  --header-status: #9ece6a;
+
+  /* Channel Table */
+  --table-header: #7aa2f7;
+  --channel-active: #9ece6a;
+  --channel-inactive: #565f89;
+
+  /* VU Meters */
+  --vu-low: #9ece6a;
+  --vu-mid: #e0af68;
+  --vu-high: #f7768e;
+  --vu-peak: #c0caf5;
+
+  /* System FX & Master Out */
+  --fx-label: #bb9af7;
+  --fx-value: #73daca;
+  --master-label: #ff9e64;
+  --master-value: #c0caf5;
+
+  /* Event Log */
+  --log-sysex: #f7768e;
+  --log-pc: #9ece6a;
+  --log-cc: #e0af68;
+  --log-tempo: #ff9e64;
+  --log-timesig: #bb9af7;
+
+  /* Activity Grid */
+  --activity-badge: #73daca;
+  --activity-chord: #bb9af7;
+
+  /* System Load */
+  --load-poly: #9ece6a;
+  --load-ram: #e0af68;
+  --load-cpu: #7aa2f7;
+}

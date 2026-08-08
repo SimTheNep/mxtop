@@ -1,0 +1,49 @@
+/* Roland XV Series Neon Green LCD */
+:root {
+  /* Global & Structural */
+  --background: #33b401;
+  --panel-border: #000000;
+  --text-primary: #000000;
+  --text-dim: #1a5e00;
+  --footer-text: #1a5e00;
+
+  /* Header & Titles */
+  --header-title: #000000;
+  --header-bpm: #000000;
+  --header-timesig: #000000;
+  --header-clock: #000000;
+  --header-status: #000000;
+
+  /* Channel Table */
+  --table-header: #000000;
+  --channel-active: #000000;
+  --channel-inactive: #1a5e00;
+
+  /* VU Meters */
+  --vu-low: #000000;
+  --vu-mid: #000000;
+  --vu-high: #000000;
+  --vu-peak: #000000;
+
+  /* System FX & Master Out */
+  --fx-label: #000000;
+  --fx-value: #000000;
+  --master-label: #000000;
+  --master-value: #000000;
+
+  /* Event Log */
+  --log-sysex: #000000;
+  --log-pc: #000000;
+  --log-cc: #000000;
+  --log-tempo: #000000;
+  --log-timesig: #000000;
+
+  /* Activity Grid */
+  --activity-badge: #000000;
+  --activity-chord: #000000;
+
+  /* System Load */
+  --load-poly: #000000;
+  --load-ram: #000000;
+  --load-cpu: #000000;
+}

@@ -1,0 +1,49 @@
+/* Classic Terminal */
+:root {
+  /* Global & Structural */
+  --background: #000000;
+  --panel-border: #ffffff;
+  --text-primary: #ffffff;
+  --text-dim: #666666;
+  --footer-text: #666666;
+
+  /* Header & Titles */
+  --header-title: #ffffff;
+  --header-bpm: #ffffff;
+  --header-timesig: #ffffff;
+  --header-clock: #ffffff;
+  --header-status: #ffffff;
+
+  /* Channel Table */
+  --table-header: #ffffff;
+  --channel-active: #ffffff;
+  --channel-inactive: #666666;
+
+  /* VU Meters */
+  --vu-low: #ffffff;
+  --vu-mid: #ffffff;
+  --vu-high: #ffffff;
+  --vu-peak: #ffffff;
+
+  /* System FX & Master Out */
+  --fx-label: #ffffff;
+  --fx-value: #ffffff;
+  --master-label: #ffffff;
+  --master-value: #ffffff;
+
+  /* Event Log */
+  --log-sysex: #ffffff;
+  --log-pc: #ffffff;
+  --log-cc: #ffffff;
+  --log-tempo: #ffffff;
+  --log-timesig: #ffffff;
+
+  /* Activity Grid */
+  --activity-badge: #ffffff;
+  --activity-chord: #ffffff;
+
+  /* System Load */
+  --load-poly: #ffffff;
+  --load-ram: #ffffff;
+  --load-cpu: #ffffff;
+}

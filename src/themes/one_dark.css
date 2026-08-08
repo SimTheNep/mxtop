@@ -1,0 +1,34 @@
+/* One Dark */
+:root {
+  --background: #282c34;
+  --panel-border: #3e4451;
+  --text-primary: #abb2bf;
+  --text-dim: #5c6370;
+  --footer-text: #5c6370;
+  --header-title: #98c379;
+  --header-bpm: #e5c07b;
+  --header-timesig: #56b6c2;
+  --header-clock: #61afef;
+  --header-status: #98c379;
+  --table-header: #61afef;
+  --channel-active: #98c379;
+  --channel-inactive: #5c6370;
+  --vu-low: #98c379;
+  --vu-mid: #e5c07b;
+  --vu-high: #e06c75;
+  --vu-peak: #abb2bf;
+  --fx-label: #c678dd;
+  --fx-value: #98c379;
+  --master-label: #d19a66;
+  --master-value: #abb2bf;
+  --log-sysex: #e06c75;
+  --log-pc: #98c379;
+  --log-cc: #e5c07b;
+  --log-tempo: #d19a66;
+  --log-timesig: #56b6c2;
+  --activity-badge: #56b6c2;
+  --activity-chord: #c678dd;
+  --load-poly: #98c379;
+  --load-ram: #e5c07b;
+  --load-cpu: #61afef;
+}

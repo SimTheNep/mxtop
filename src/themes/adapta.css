@@ -1,0 +1,34 @@
+/* Adapta */
+:root {
+  --background: #222d32;
+  --panel-border: #37474f;
+  --text-primary: #cfd8dc;
+  --text-dim: #546e7a;
+  --footer-text: #546e7a;
+  --header-title: #00e676;
+  --header-bpm: #ffca28;
+  --header-timesig: #00bcd4;
+  --header-clock: #009688;
+  --header-status: #00e676;
+  --table-header: #00bcd4;
+  --channel-active: #00e676;
+  --channel-inactive: #546e7a;
+  --vu-low: #00e676;
+  --vu-mid: #ffca28;
+  --vu-high: #ff5252;
+  --vu-peak: #cfd8dc;
+  --fx-label: #ab47bc;
+  --fx-value: #00e676;
+  --master-label: #ff7043;
+  --master-value: #cfd8dc;
+  --log-sysex: #ff5252;
+  --log-pc: #00e676;
+  --log-cc: #ffca28;
+  --log-tempo: #ff7043;
+  --log-timesig: #ab47bc;
+  --activity-badge: #00bcd4;
+  --activity-chord: #ab47bc;
+  --load-poly: #00e676;
+  --load-ram: #ffca28;
+  --load-cpu: #00bcd4;
+}

@@ -1,0 +1,34 @@
+/* Catppuccin Mocha */
+:root {
+  --background: #1e1e2e;
+  --panel-border: #45475a;
+  --text-primary: #cdd6f4;
+  --text-dim: #585b70;
+  --footer-text: #585b70;
+  --header-title: #a6e3a1;
+  --header-bpm: #f9e2af;
+  --header-timesig: #89dceb;
+  --header-clock: #89b4fa;
+  --header-status: #a6e3a1;
+  --table-header: #89b4fa;
+  --channel-active: #a6e3a1;
+  --channel-inactive: #585b70;
+  --vu-low: #a6e3a1;
+  --vu-mid: #f9e2af;
+  --vu-high: #f38ba8;
+  --vu-peak: #f5e0dc;
+  --fx-label: #cba6f7;
+  --fx-value: #a6e3a1;
+  --master-label: #fab387;
+  --master-value: #cdd6f4;
+  --log-sysex: #f38ba8;
+  --log-pc: #a6e3a1;
+  --log-cc: #f9e2af;
+  --log-tempo: #fab387;
+  --log-timesig: #89dceb;
+  --activity-badge: #89dceb;
+  --activity-chord: #cba6f7;
+  --load-poly: #a6e3a1;
+  --load-ram: #f9e2af;
+  --load-cpu: #89b4fa;
+}

@@ -46,9 +46,46 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
 
         if (!midifile.read(filenames[fileIdx])) {
             logDbg("[midi_load] Failed to read MIDI file: " + filenames[fileIdx]);
+        } else {
+            logDbg("[midi_load] Successfully loaded file [%zu/%zu]: %s", 
+                   fileIdx + 1, filenames.size(), filenames[fileIdx].c_str());
         }
 
         midifile.doTimeAnalysis(); // Converts MIDI delta-ticks since last message into a timestamp
+
+        // Extract metadata from SMF header and meta events
+        for (int track = 0; track < midifile.getTrackCount(); ++track) {
+            // Track total duration from last event timestamp
+            if (midifile[track].size() > 0) {
+                double trackEndMs = midifile[track].back().seconds * 1000.0;
+                meta_.totalDurationMs = std::max(meta_.totalDurationMs, trackEndMs);
+            }
+
+            for (int i = 0; i < midifile[track].size(); ++i) {
+                auto& e = midifile[track][i];
+
+                if (!e.isMeta()) continue;
+
+                // Track/Sequence Name (Meta 0x03)
+                if (e.getMetaType() == 0x03 && meta_.songTitle == "Untitled MIDI") {
+                    std::string name = e.getMetaContent();
+                    if (!name.empty()) meta_.songTitle = name;
+                }
+                // Initial Tempo Change (Meta 0x51)
+                else if (e.getMetaType() == 0x51 && e.size() >= 6) {
+                    double microsec = (e[3] << 16) | (e[4] << 8) | e[5];
+                    if (microsec > 0) meta_.bpm = 60000000.0 / microsec;
+                }
+                // Initial Time Signature (Meta 0x58)
+                else if (e.getMetaType() == 0x58 && e.size() >= 5) {
+                    meta_.timeSigNum = e[3];
+                    meta_.timeSigDenom = 1 << e[4];
+                }
+            }
+        }
+
+        logDbg("[midi_load] Metadata -> Title: '%s', BPM: %.2f, TimeSig: %d/%d, Duration: %.2f ms",
+            meta_.songTitle.c_str(), meta_.bpm, meta_.timeSigNum, meta_.timeSigDenom, meta_.totalDurationMs);
 
         const bool multiPortFile = (filenames.size() == 1 && outputCount > 1);
 
@@ -92,22 +129,37 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
                     }
 
                     if (!hasChannelData) {
-                        trackPorts[track] = 0; // Meta/tempo-only track
-                        continue;
+                        trackPorts[track] = 0; // Meta/tempo-only track assigned to Port 0
+                        // DO NOT continue here! We still need to parse Track 0's tempo/time-sig events.
+                    } else {
+                        trackPorts[track] = (dataTrackIndex / midChannels) % static_cast<int>(outputCount);
+                        ++dataTrackIndex;
                     }
-
-                    trackPorts[track] = (dataTrackIndex / midChannels) % static_cast<int>(outputCount);
-                    ++dataTrackIndex;
                 }
             }
 
             for (int track = 0; track < trackCount; ++track) {
-                int trackPort = trackPorts[track];
-                logDbg("[midi_load] track %d -> port %d\n", track, trackPort);
+                int trackPort = (trackPorts[track] >= 0) ? trackPorts[track] : 0;
+                logDbg("[midi_load] track %d -> port %d", track, trackPort);
 
                 for (int i = 0; i < midifile[track].size(); ++i) {
                     auto& midiEvent = midifile[track][i];
-                    if (midiEvent.isMeta()) continue;
+
+                    // Time signature and BPM processing
+                    if (midiEvent.isMeta()) {
+                        uint8_t metaType = midiEvent.getMetaType();
+                        if (metaType == 0x51 || metaType == 0x58) {
+                            RawEvent ev;
+                            ev.kind = MsgKind::Meta;
+                            ev.channel = -1;
+                            ev.velocity = 0;
+                            ev.timestamp = midiEvent.seconds * 1000.0;
+                            ev.data.assign(midiEvent.begin(), midiEvent.end());
+                            tempTrackLists[track].push_back(std::move(ev));
+                        }
+                        continue;
+                    }
+
                     if (midiEvent.size() == 0) continue;
 
                     RawEvent ev;
@@ -185,9 +237,20 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
             for (int i = 0; i < midifile[track].size(); i++) {
                 auto& midiEvent = midifile[track][i];
 
-                // Meta events are ignored for now, will be used for the UI later on
-                if (midiEvent.isMeta())
+                // Process meta events for BPM and time signature tracking
+                if (midiEvent.isMeta()) {
+                    uint8_t metaType = midiEvent.getMetaType();
+                    if (metaType == 0x51 || metaType == 0x58) {
+                        RawEvent ev;
+                        ev.kind = MsgKind::Meta;
+                        ev.channel = -1;
+                        ev.velocity = 0;
+                        ev.timestamp = midiEvent.seconds * 1000.0;
+                        ev.data.assign(midiEvent.begin(), midiEvent.end());
+                        tempFileLists[fileIdx].push_back(std::move(ev));
+                    }
                     continue;
+                }
 
                 if (midiEvent.size() == 0)
                     continue;
@@ -196,7 +259,6 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
                 ev.kind = MsgKind::Unknown;
                 ev.channel = -1;
                 ev.velocity = 0;
-                // This branch only ever runs when !multiPortFile
                 ev.sourcePorts.push_back(static_cast<int>(fileIdx));
                 ev.timestamp = midiEvent.seconds * 1000.0;
                 ev.data.assign(midiEvent.begin(), midiEvent.end());
@@ -228,7 +290,6 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
                     case 0x90:
                         if (ev.data.size() < 3) { skippedEvents++; continue; }
                         if (ev.data[2] == 0) {
-                            // Note On with velocity 0 is equal to Note Off
                             ev.kind = MsgKind::NoteOff;
                             ev.velocity = 0;
                         } else {
@@ -239,7 +300,7 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
                     case 0xA0:
                         if (ev.data.size() < 3) { skippedEvents++; continue; }
                         ev.kind = MsgKind::PolyAftertouch;
-                        ev.velocity = ev.data[2]; // Often treated as velocity too
+                        ev.velocity = ev.data[2];
                         break;
 
                     case 0xB0:
@@ -263,7 +324,6 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
                         break;
 
                     default:
-                        // Invalid status byte is skipped
                         skippedEvents++;
                         continue;
                 }
@@ -283,11 +343,6 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
     }
 
     // FILE MERGE INTO STREAM
-    //
-    // A simple scan is fast enough since the number of files ports is not gonna be too big
-    // Actual logic that forces the files to sync by comparing timestamps
-    //
-
     std::vector<size_t> indices(filenames.size(), 0);
     size_t queuedFiles = 0;
 
@@ -295,7 +350,6 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
         int nextFile = -1;
         double earliestTime = -1.0;
 
-        // Checks all files for the next event to define priority...
         for (size_t f = 0; f < tempFileLists.size(); ++f) {
             if (indices[f] < tempFileLists[f].size()) {
                 double t = tempFileLists[f][indices[f]].timestamp;
@@ -308,15 +362,13 @@ void MidiReader::dataInit( const std::vector<std::string>& filenames, size_t out
         }
 
         if (nextFile == -1)
-            break; // every file fully consumed
+            break;
 
-        // Pull in all events across all files that share this exact timestamp (synchroooooonizeeeeed)
         for (size_t f = 0; f < tempFileLists.size(); ++f) {
             while (
                 indices[f] < tempFileLists[f].size() &&
                 tempFileLists[f][indices[f]].timestamp == earliestTime
             ) {
-                // IMPORTANT! USE pushNoCap() AND NOT push(), CHECK THE COMMENT ON pushNoCap()
                 pushNoCap(std::move(tempFileLists[f][indices[f]]));
                 indices[f]++;
                 queuedFiles++;

@@ -26,6 +26,7 @@
         "program": 0
       },
       "rhythm_channel": 10,
+      "bank_select": { "msb": "bank", "lsb": "variation" },
       "sysex": {
         "base": "10002004"
       },
@@ -89,7 +90,7 @@
     { "id": "mfx_b",         "kind": "sysex", "address": "11200600", "lookup": "mfx_types", "default": 91 },
     { "id": "mfx_c",         "kind": "sysex", "address": "11400600", "lookup": "mfx_types", "default": 91 },
 
-    { "id": "afx",           "kind": "sysex", "address": "02102000", "lookup": "afx_types" },
+    { "id": "afx",           "kind": "sysex", "address": "02102000", "lookup": "afx_types", "default": 16 },
 
     {
       "id": "rhythm_part",

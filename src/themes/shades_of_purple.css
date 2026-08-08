@@ -1,0 +1,34 @@
+/* Shades of Purple */
+:root {
+  --background: #1e1e3f;
+  --panel-border: #4d4d80;
+  --text-primary: #ffffff;
+  --text-dim: #a599e9;
+  --footer-text: #a599e9;
+  --header-title: #3ad900;
+  --header-bpm: #ffb86c;
+  --header-timesig: #00f5c4;
+  --header-clock: #00bfff;
+  --header-status: #3ad900;
+  --table-header: #00bfff;
+  --channel-active: #3ad900;
+  --channel-inactive: #a599e9;
+  --vu-low: #3ad900;
+  --vu-mid: #ffb86c;
+  --vu-high: #ff628c;
+  --vu-peak: #ffffff;
+  --fx-label: #fad000;
+  --fx-value: #3ad900;
+  --master-label: #ffb86c;
+  --master-value: #ffffff;
+  --log-sysex: #ff628c;
+  --log-pc: #3ad900;
+  --log-cc: #ffb86c;
+  --log-tempo: #fad000;
+  --log-timesig: #00f5c4;
+  --activity-badge: #00f5c4;
+  --activity-chord: #fad000;
+  --load-poly: #3ad900;
+  --load-ram: #ffb86c;
+  --load-cpu: #00bfff;
+}

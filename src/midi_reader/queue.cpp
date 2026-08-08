@@ -45,6 +45,7 @@ std::optional<std::string> MidiReader::detectSysEx(const RawEvent& ev){
     {
         if (sysexMatches(ev.data, rule.data))
         {
+            logDbg("[queue] SysEx detection match! Detected module folder: %s", rule.moduleFolder.c_str());
             return rule.moduleFolder;
         }
     }

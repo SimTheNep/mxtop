@@ -32,8 +32,17 @@ const channelState* stateLayer::getChannel(int channel) const {
 // Generates a list of all active MIDI channels
 std::vector<int> stateLayer::activeCh() const
 {
-    const int totalChannels =
-        std::max(1, static_cast<int>(reader_.sourceCount()) * reader_.midChannels());
+    // Start with default 16 channels, but dynamically expand if higher channels exist in channels_
+    int maxCh = std::max(16, static_cast<int>(reader_.sourceCount()) * reader_.midChannels());
+
+    for (const auto& [ch, cState] : channels_) {
+        if (ch >= 0) {
+            maxCh = std::max(maxCh, ch + 1);
+        }
+    }
+
+    // Round up to nearest 16-channel port block (16, 32, 48, 64...)
+    const int totalChannels = ((maxCh + 15) / 16) * 16;
 
     std::vector<int> result;
     result.reserve(totalChannels);
@@ -64,13 +73,35 @@ std::optional<std::string> stateLayer::effLookup(const ModuleObject& obj, int va
 }
 
 
+// Looks up bank name from dictionary.json bankGroups
+std::optional<std::string> stateLayer::bankLookup(bool isRhythm, int msb, int lsb) const {
+    const std::string groupKey = isRhythm ? "drum_kits" : "patches";
+    auto groupIt = dictionary_.bankGroups.find(groupKey);
+    if (groupIt == dictionary_.bankGroups.end()) {
+        groupIt = dictionary_.bankGroups.find("patches");
+    }
+    if (groupIt == dictionary_.bankGroups.end()) return std::nullopt;
+
+    for (const auto& bank : groupIt->second) {
+        if (bank.bank.bankMSB && *bank.bank.bankMSB != msb) continue;
+        if (bank.bank.bankLSB && *bank.bank.bankLSB != lsb) continue;
+        return bank.name;
+    }
+
+    return std::nullopt;
+}
+
+
 // Assigns patch names from dictionary.json
-std::optional<std::string> stateLayer::patchLookup(bool isRhythm, const channelState::patchState& patch) const {
+std::optional<std::string> stateLayer::patchLookup(bool isRhythm, const channelState::patchState& patch, int* resolvedLsb) const {
     channelState::patchState lookupPatch = patch;
 
     // GS drum kits ignore bank MSB values, force to 0 for lookup
     if (module_.id == "gs" && isRhythm)
         lookupPatch.msb = 0;
+
+    // Assumes the patch lsb is the one set, if not, it will fallback to the closest one below it
+    if (resolvedLsb) *resolvedLsb = patch.lsb;
 
     auto tryGroup = [&](const std::string& groupName, int lsbToMatch) -> std::optional<std::string> {
     auto groupIt = dictionary_.bankGroups.find(groupName);
@@ -95,32 +126,22 @@ std::optional<std::string> stateLayer::patchLookup(bool isRhythm, const channelS
     const std::string groupKey = isRhythm ? "drum_kits" : "patches";
 
     if (module_.id == "gs") {
-        // Fallback tier search for GS bank structures
+        // Tier search for GS maps
+        // Basically checks whether the patch is available for the 55, 88, 88Pro or 8850 and dictactes whether it will be used or not
         static const int tiers[] = {4, 3, 2, 1};
         const int startTier = (patch.lsb == 0) ? 4 : patch.lsb;
         for (int tier : tiers) {
             if (tier > startTier) continue;
-            if (auto name = tryGroup(groupKey, tier)) return name;
+            if (auto name = tryGroup(groupKey, tier)) {
+                if (resolvedLsb) *resolvedLsb = tier;
+                return name;
+            }
         }
     } else {
         // Standard lookup for non-GS modules
         if (auto name = tryGroup(groupKey, patch.lsb)) return name;
         if (auto name = tryGroup("patches", patch.lsb)) return name;
     }
-
-    // log(
-    //     "Lookup failed: rhythm=", isRhythm,
-    //     " msb=", patch.msb,
-    //     " lsb=", patch.lsb,
-    //     " program=", patch.program
-    // );
-
-
-    // log("PATCH LOOKUP FAILED",
-    // " rhythm=", isRhythm,
-    // " msb=", lookupPatch.msb,
-    // " lsb=", patch.lsb,
-    // " program=", patch.program);
 
     return std::nullopt;
 }
@@ -193,8 +214,6 @@ std::optional<std::string> stateLayer::finalVal(int channel, const std::string& 
         return std::nullopt;
 
     return mathVal(obj, valueIt->second);
-
-    return mathVal(*objIt->second, valueIt->second);
 }
 
 
@@ -216,6 +235,17 @@ takeSnapshot stateLayer::snapshot(int channel) const {
     takeSnapshot snap;
 
     if (channel == -1) {
+        if (const channelState* sysCh = getChannel(-1)) {
+            for (const auto& [id, raw] : sysCh->rawValues) {
+                auto objIt = objectById_.find(id);
+
+                if (objIt == objectById_.end()) continue;
+
+                snap.rawValues[id] = raw;
+                snap.values[id] = mathVal(*objIt->second, raw);
+            }
+        }
+
         for (const auto& [channelNumber, channelState] : channels_) {
             if (channelNumber < 0) {
                 continue;
@@ -244,6 +274,7 @@ takeSnapshot stateLayer::snapshot(int channel) const {
 
         if (objIt == objectById_.end()) continue;
 
+        snap.rawValues[id] = raw;
         snap.values[id] = mathVal(*objIt->second, raw);
     }
     
@@ -256,69 +287,68 @@ takeSnapshot stateLayer::snapshot(int channel) const {
             if (obj == objectById_.end())
                 continue;
 
+            snap.rawValues[objId] = raw;
             snap.values[objId] = mathVal(*obj->second, raw);
         }
 
-        // log(
-        //     "[PATCH STATE] ",
-        //     patchId,
-        //     " msb=", patch.msb,
-        //     " lsb=", patch.lsb,
-        //     " pc=", patch.program,
-        //     " values=", patch.values.size()
-        // );
+        snap.values["program"] = std::to_string(patch.program);
+        snap.values["msb"] = std::to_string(patch.msb);
 
-        const bool rhythm =
-            ch->rhythmFromSysEx ||
-            ch->rhythmFromBank;
-        
+        bool rhythm = ch->rhythmFromSysEx || ch->rhythmFromBank;
+
+        // Auto-detect rhythm mode if patch MSB matches a drum bank MSB
+        if (defaultPatchObject_ && defaultPatchObject_->drumBankMsb) {
+            const auto& list = *defaultPatchObject_->drumBankMsb;
+            if (std::find(list.begin(), list.end(), patch.msb) != list.end()) {
+                rhythm = true;
+            }
+        }
+
         snap.isRhythm = rhythm;
 
-        // if (channel == 8)
-        // {
-        //     log("CH8",
-        //         " bank=", ch->rhythmFromBank,
-        //         " sysex=", ch->rhythmFromSysEx,
-        //         " final=", rhythm,
-        //         " msb=", patch.msb,
-        //         " lsb=", patch.lsb,
-        //         " pc=", patch.program);
-        // }
+        if (auto bName = bankLookup(rhythm, patch.msb, patch.lsb)) {
+            snap.values["bank_name"] = *bName;
+        } else {
+            snap.values["bank_name"] = "";
+        }
 
-            
-
-        snap.patchNames[patchId] =
-            patchLookup(rhythm, patch);
+        // patchLookup falls back to the nearest low variation
+        int resolvedLsb = patch.lsb;
+        snap.patchNames[patchId] = patchLookup(rhythm, patch, &resolvedLsb);
+        snap.values["lsb"] = std::to_string(resolvedLsb);
     }
 
-    // Aggregates global polyphony
+    // Aggregates global polyphony or individual channel notes
     if (channel == -1) {
         int totalPoly = 0;
         int globalLastNote = -1;
         int globalLastVelo = 0;
+
         for (const auto& [chNum, cState] : channels_) {
             totalPoly += static_cast<int>(cState.activeNotes.size());
+
             if (cState.lastNote != -1) {
                 globalLastNote = cState.lastNote;
                 globalLastVelo = cState.lastVelo;
             }
         }
+
         snap.polyCount = totalPoly;
         snap.lastNote = globalLastNote;
         snap.lastVelo = globalLastVelo;
+
     } else {
+
         snap.polyCount = static_cast<int>(ch->activeNotes.size());
         snap.lastNote = ch->lastNote;
         snap.lastVelo = ch->lastVelo;
+
+        // Populate active notes
+        snap.activeNotes.reserve(ch->activeNotes.size());
+        for (const auto& [note, velo] : ch->activeNotes) {
+            snap.activeNotes.push_back(note);
+        }
     }
-
-    // log("===== SNAPSHOT =====");
-
-    // for (const auto& [id, value] : snap.values)
-    //     log(id, " = ", value);
-
-    // for (const auto& [id, name] : snap.patchNames)
-    //     log(id, " -> ", name.value_or("<none>"));
 
     return snap;
 }

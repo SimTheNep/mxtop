@@ -1,0 +1,34 @@
+/* Catppuccin Frappe */
+:root {
+  --background: #303446;
+  --panel-border: #51576d;
+  --text-primary: #c6d0f5;
+  --text-dim: #626880;
+  --footer-text: #626880;
+  --header-title: #a6d189;
+  --header-bpm: #e5c890;
+  --header-timesig: #81c8be;
+  --header-clock: #8caaee;
+  --header-status: #a6d189;
+  --table-header: #8caaee;
+  --channel-active: #a6d189;
+  --channel-inactive: #626880;
+  --vu-low: #a6d189;
+  --vu-mid: #e5c890;
+  --vu-high: #e78284;
+  --vu-peak: #f2d5cf;
+  --fx-label: #ca9ee6;
+  --fx-value: #a6d189;
+  --master-label: #ef9f76;
+  --master-value: #c6d0f5;
+  --log-sysex: #e78284;
+  --log-pc: #a6d189;
+  --log-cc: #e5c890;
+  --log-tempo: #ef9f76;
+  --log-timesig: #ca9ee6;
+  --activity-badge: #81c8be;
+  --activity-chord: #ca9ee6;
+  --load-poly: #a6d189;
+  --load-ram: #e5c890;
+  --load-cpu: #8caaee;
+}

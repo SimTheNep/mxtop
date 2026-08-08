@@ -1,0 +1,49 @@
+/* Default Native Terminal Theme */
+:root {
+  /* Global & Structural */
+  --background: default;
+  --panel-border: brightblue;
+  --text-primary: brightwhite;
+  --text-dim: gray;
+  --footer-text: gray;
+
+  /* Header & Titles */
+  --header-title: brightgreen;
+  --header-bpm: brightyellow;
+  --header-timesig: brightcyan;
+  --header-clock: brightmagenta;
+  --header-status: brightgreen;
+
+  /* Channel Table */
+  --table-header: brightcyan;
+  --channel-active: brightgreen;
+  --channel-inactive: gray;
+
+  /* VU Meters */
+  --vu-low: green;
+  --vu-mid: yellow;
+  --vu-high: brightred;
+  --vu-peak: brightwhite;
+
+  /* System FX & Master Out */
+  --fx-label: brightmagenta;
+  --fx-value: brightgreen;
+  --master-label: brightyellow;
+  --master-value: brightwhite;
+
+  /* Event Log */
+  --log-sysex: brightred;
+  --log-pc: brightgreen;
+  --log-cc: brightyellow;
+  --log-tempo: brightmagenta;
+  --log-timesig: brightcyan;
+
+  /* Activity Grid */
+  --activity-badge: brightcyan;
+  --activity-chord: brightmagenta;
+
+  /* System Load */
+  --load-poly: brightgreen;
+  --load-ram: brightyellow;
+  --load-cpu: brightcyan;
+}

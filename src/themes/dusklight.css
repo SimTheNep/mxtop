@@ -1,0 +1,34 @@
+/* Dusklight */
+:root {
+  --background: #191b28;
+  --panel-border: #2d3148;
+  --text-primary: #d0d7ed;
+  --text-dim: #50567a;
+  --footer-text: #50567a;
+  --header-title: #70d69b;
+  --header-bpm: #f3c270;
+  --header-timesig: #65b8e5;
+  --header-clock: #7890f5;
+  --header-status: #70d69b;
+  --table-header: #7890f5;
+  --channel-active: #70d69b;
+  --channel-inactive: #50567a;
+  --vu-low: #70d69b;
+  --vu-mid: #f3c270;
+  --vu-high: #f07085;
+  --vu-peak: #d0d7ed;
+  --fx-label: #c085f5;
+  --fx-value: #70d69b;
+  --master-label: #f59570;
+  --master-value: #d0d7ed;
+  --log-sysex: #f07085;
+  --log-pc: #70d69b;
+  --log-cc: #f3c270;
+  --log-tempo: #f59570;
+  --log-timesig: #c085f5;
+  --activity-badge: #65b8e5;
+  --activity-chord: #c085f5;
+  --load-poly: #70d69b;
+  --load-ram: #f3c270;
+  --load-cpu: #7890f5;
+}

@@ -1,0 +1,49 @@
+/* Edirol SD-90 Studio Canvas Blue LCD */
+:root {
+  /* Global & Structural */
+  --background: #d4dafd;
+  --panel-border: #3642fb;
+  --text-primary: #3642fb;
+  --text-dim: #7078b0;
+  --footer-text: #7078b0;
+
+  /* Header & Titles */
+  --header-title: #3642fb;
+  --header-bpm: #3642fb;
+  --header-timesig: #3642fb;
+  --header-clock: #3642fb;
+  --header-status: #3642fb;
+
+  /* Channel Table */
+  --table-header: #3642fb;
+  --channel-active: #3642fb;
+  --channel-inactive: #7078b0;
+
+  /* VU Meters */
+  --vu-low: #3642fb;
+  --vu-mid: #3642fb;
+  --vu-high: #3642fb;
+  --vu-peak: #3642fb;
+
+  /* System FX & Master Out */
+  --fx-label: #3642fb;
+  --fx-value: #3642fb;
+  --master-label: #3642fb;
+  --master-value: #3642fb;
+
+  /* Event Log */
+  --log-sysex: #3642fb;
+  --log-pc: #3642fb;
+  --log-cc: #3642fb;
+  --log-tempo: #3642fb;
+  --log-timesig: #3642fb;
+
+  /* Activity Grid */
+  --activity-badge: #3642fb;
+  --activity-chord: #3642fb;
+
+  /* System Load */
+  --load-poly: #3642fb;
+  --load-ram: #3642fb;
+  --load-cpu: #3642fb;
+}

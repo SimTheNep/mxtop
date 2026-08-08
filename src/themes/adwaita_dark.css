@@ -1,0 +1,34 @@
+/* Adwaita Dark */
+:root {
+  --background: #242424;
+  --panel-border: #383838;
+  --text-primary: #ffffff;
+  --text-dim: #777777;
+  --footer-text: #777777;
+  --header-title: #2ec27e;
+  --header-bpm: #f5c211;
+  --header-timesig: #3584e4;
+  --header-clock: #3584e4;
+  --header-status: #2ec27e;
+  --table-header: #3584e4;
+  --channel-active: #2ec27e;
+  --channel-inactive: #777777;
+  --vu-low: #2ec27e;
+  --vu-mid: #f5c211;
+  --vu-high: #e01b24;
+  --vu-peak: #ffffff;
+  --fx-label: #9141ac;
+  --fx-value: #2ec27e;
+  --master-label: #e66100;
+  --master-value: #ffffff;
+  --log-sysex: #e01b24;
+  --log-pc: #2ec27e;
+  --log-cc: #f5c211;
+  --log-tempo: #e66100;
+  --log-timesig: #9141ac;
+  --activity-badge: #3584e4;
+  --activity-chord: #9141ac;
+  --load-poly: #2ec27e;
+  --load-ram: #f5c211;
+  --load-cpu: #3584e4;
+}

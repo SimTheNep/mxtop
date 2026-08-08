@@ -17,7 +17,7 @@
         ]
     },
 
-    "efx_routing": {
+    "efx_part_assign": {
         "type": "enum",
 
         "values": [

@@ -1,0 +1,34 @@
+/* Adwaita Light */
+:root {
+  --background: #f6f5f4;
+  --panel-border: #cdc7c2;
+  --text-primary: #2e3436;
+  --text-dim: #9a9996;
+  --footer-text: #9a9996;
+  --header-title: #26a269;
+  --header-bpm: #e5a50a;
+  --header-timesig: #1278a8;
+  --header-clock: #1c71d8;
+  --header-status: #26a269;
+  --table-header: #1278a8;
+  --channel-active: #26a269;
+  --channel-inactive: #9a9996;
+  --vu-low: #26a269;
+  --vu-mid: #e5a50a;
+  --vu-high: #c01c28;
+  --vu-peak: #2e3436;
+  --fx-label: #613583;
+  --fx-value: #26a269;
+  --master-label: #c64600;
+  --master-value: #2e3436;
+  --log-sysex: #c01c28;
+  --log-pc: #26a269;
+  --log-cc: #e5a50a;
+  --log-tempo: #c64600;
+  --log-timesig: #613583;
+  --activity-badge: #1278a8;
+  --activity-chord: #613583;
+  --load-poly: #26a269;
+  --load-ram: #e5a50a;
+  --load-cpu: #1c71d8;
+}

@@ -45,6 +45,7 @@ void stateLayer::storeValue(channelState& ch, const std::vector<const ModuleObje
 // Bank updating, PC, MSB and LSB work differently than the rest
 void stateLayer::updtBank(channelState& ch, int channel, int ccNum, int value)
 {
+    logDbg("[state_events] Ch %02d -> Bank Select CC%d = %d", channel + 1, ccNum, value);
     for (const auto& pb : patchIndex_)
     {
         if (ccNum == 0)
@@ -56,6 +57,10 @@ void stateLayer::updtBank(channelState& ch, int channel, int ccNum, int value)
             {
                 const auto& list = *pb.obj->drumBankMsb;
                 ch.rhythmFromBank = std::find(list.begin(), list.end(), value) != list.end();
+                
+                if (ch.rhythmFromBank) {
+                    logDbg("[state_events] Ch %02d switched to Rhythm mode via MSB %d", channel + 1, value);
+                }
             }
         }
 
@@ -68,6 +73,7 @@ void stateLayer::updtBank(channelState& ch, int channel, int ccNum, int value)
 // Updates the program change
 void stateLayer::updtPC(channelState& ch, int channel, int program)
 {
+    logDbg("[state_events] Ch %02d -> Program Change: %d", channel + 1, program + 1);
     for (const auto& pb : patchIndex_)
     {
         if (pb.hasProgram)

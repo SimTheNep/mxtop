@@ -1,8 +1,10 @@
 CXX := g++
 
-CXXFLAGS := -std=c++17 -I. -Imidi_reader/craigsapp
-RTMIDI_CFLAGS := $(shell pkg-config --cflags rtmidi)
-RTMIDI_LIBS   := $(shell pkg-config --libs rtmidi)
+CXXFLAGS := -std=c++17 -I. -I/usr/local/include -Imidi_reader/craigsapp
+
+RTMIDI_CFLAGS := $(shell pkg-config --cflags rtmidi 2>/dev/null)
+RTMIDI_LIBS   := $(shell pkg-config --libs rtmidi 2>/dev/null || echo "-lrtmidi")
+FTXUI_LIBS    := -L/usr/local/lib -lftxui-component -lftxui-dom -lftxui-screen
 
 CXXFLAGS += $(RTMIDI_CFLAGS)
 
@@ -25,8 +27,18 @@ COMMON_SRCS := \
 
 COMMON_OBJS := $(COMMON_SRCS:.cpp=.o)
 
+# Automatically locates settings.cpp in config/, tui/, or root folder
+SETTINGS_SRC := $(wildcard config/settings.cpp tui/settings.cpp settings.cpp)
+
 MAIN_SRCS := \
     main.cpp \
+    $(SETTINGS_SRC) \
+    tui/ui_model.cpp \
+    tui/layouts.cpp \
+    tui/ui_main.cpp \
+    tui/widgets/system_resources.cpp \
+    tui/widgets/status_log.cpp \
+    tui/widgets/activity_log.cpp \
     tui/debug/debug_ui.cpp
 
 MAIN_OBJS := $(MAIN_SRCS:.cpp=.o)
@@ -64,12 +76,12 @@ all: $(ALL_TARGETS) cleanup-objects
 
 $(MAIN_TARGET): $(MAIN_OBJS) $(COMMON_OBJS)
 	@printf "[LD ] %s\n" "$@"
-	@$(CXX) $^ $(RTMIDI_LIBS) -lncurses -o $@
+	@$(CXX) $^ $(RTMIDI_LIBS) $(FTXUI_LIBS) -lncurses -o $@
 
 $(MIDI_TARGET): $(MAIN_OBJS) $(COMMON_OBJS)
 	@printf "[LD ] %s\n" "$@"
 	@mkdir -p midi_reader
-	@$(CXX) $^ $(RTMIDI_LIBS) -lncurses -o $@
+	@$(CXX) $^ $(RTMIDI_LIBS) $(FTXUI_LIBS) -lncurses -o $@
 
 $(STATE_TARGET): $(STATE_OBJS) $(COMMON_OBJS)
 	@printf "[LD ] %s\n" "$@"
@@ -91,4 +103,4 @@ clean:
 	@printf "[RM ] executables\n"
 	@rm -f $(ALL_TARGETS)
 
-.PHONY: all clean cleanup-objects
+.PHONY: all clean

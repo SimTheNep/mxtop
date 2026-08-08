@@ -1,8 +1,10 @@
 #include "parser.hpp"
+#include "../log.hpp"
 
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 // PARSER_DICTIONARY.CPP
 //
@@ -10,7 +12,7 @@
 
 using json = nlohmann::json;
 
-// Parses enums and individual values
+// Parses enums and individual values (Base-10 default with 0x Hex support)
 static enumDef parseEnum(const json& j) {
     enumDef def;
 
@@ -18,10 +20,20 @@ static enumDef parseEnum(const json& j) {
         enumValue entry;
 
         if (value.contains("id")) {
-            if (value["id"].is_string())
-                entry.id = std::stoi(value["id"].get<std::string>());
-            else
+            if (value["id"].is_string()) {
+                std::string s = value["id"].get<std::string>();
+                try {
+                    if (s.rfind("0x", 0) == 0 || s.rfind("0X", 0) == 0) {
+                        entry.id = std::stoi(s, nullptr, 16);
+                    } else {
+                        entry.id = std::stoi(s, nullptr, 10);
+                    }
+                } catch (...) {
+                    entry.id = 0;
+                }
+            } else {
                 entry.id = value["id"].get<int>();
+            }
 
             entry.name = value.at("name").get<std::string>();
 
@@ -30,11 +42,20 @@ static enumDef parseEnum(const json& j) {
             else if (value.contains("short_name"))
                 entry.shortName = value["short_name"].get<std::string>();
 
-        } else {
-            for (const auto& [id, name] : value.items()) {
+        } else if (value.is_object()) {
+            // Key-value object mapping e.g. {"0": "MFX", "1": "BYP", "13": "PAT"}
+            for (const auto& [idStr, nameVal] : value.items()) {
                 enumValue simple;
-                simple.id   = std::stoi(id);
-                simple.name = name.get<std::string>();
+                try {
+                    if (idStr.rfind("0x", 0) == 0 || idStr.rfind("0X", 0) == 0) {
+                        simple.id = std::stoi(idStr, nullptr, 16);
+                    } else {
+                        simple.id = std::stoi(idStr, nullptr, 10);
+                    }
+                } catch (...) {
+                    simple.id = 0;
+                }
+                simple.name = nameVal.get<std::string>();
                 def.values.push_back(simple);
             }
             continue;
@@ -126,6 +147,9 @@ dictionaryDef parseDictionary(const json& j) {
                 def.efxFlags[key] = flags;
         }
     }
+
+    logDbg("[parser_dictionary] Parsed %zu enum(s), %zu bank group(s), %zu efx flag set(s)",
+        def.enums.size(), def.bankGroups.size(), def.efxFlags.size());
 
     return def;
 }

@@ -1,0 +1,34 @@
+/* Kimbie Dark */
+:root {
+  --background: #221a0f;
+  --panel-border: #362817;
+  --text-primary: #d3af86;
+  --text-dim: #6e583b;
+  --footer-text: #6e583b;
+  --header-title: #889b4c;
+  --header-bpm: #f0a45d;
+  --header-timesig: #7e807e;
+  --header-clock: #dc3958;
+  --header-status: #889b4c;
+  --table-header: #dc3958;
+  --channel-active: #889b4c;
+  --channel-inactive: #6e583b;
+  --vu-low: #889b4c;
+  --vu-mid: #f0a45d;
+  --vu-high: #dc3958;
+  --vu-peak: #d3af86;
+  --fx-label: #986a9f;
+  --fx-value: #889b4c;
+  --master-label: #f0a45d;
+  --master-value: #d3af86;
+  --log-sysex: #dc3958;
+  --log-pc: #889b4c;
+  --log-cc: #f0a45d;
+  --log-tempo: #f0a45d;
+  --log-timesig: #986a9f;
+  --activity-badge: #7e807e;
+  --activity-chord: #986a9f;
+  --load-poly: #889b4c;
+  --load-ram: #f0a45d;
+  --load-cpu: #dc3958;
+}

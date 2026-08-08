@@ -5,39 +5,46 @@
       "geometry": { "min_width": 160, "min_height": 42, "page_size": 16, "channel_columns": 1 },
       "views": {
         "channels": [
-          { "field": "patch", "label": "PGN", "width": 28 },
-          { "field": "volume", "label": "VOL", "width": 7 },
-          { "field": "pan", "label": "PAN", "width": 7 },
-          { "fields": ["pitch", "part_tune"], "label": "PITCH", "join": " / ", "width": 12 },
-          { "fields": ["cutoff", "resonance"], "label": "CUT/RES", "join": " / ", "width": 15 },
-          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / ", "width": 17 },
-          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / ", "width": 14 },
-          { "field": "variation_send", "label": "VAR", "width": 8 },
-          { "field": "part_mode", "label": "MODE", "width": 8 },
-          { "fields": ["vibrato_depth", "vibrato_rate", "vibrato_delay"], "label": "VIB:D/R/D", "join": "/", "width": 17 },
-          { "fields": ["portamento_switch", "portamento_time"], "label": "PORTA", "join": "/", "width": 12 }
+          { "field": "patch", "label": "PGN" },
+          { "field": "volume", "label": "VOL" },
+          { "field": "pan", "label": "PAN" },
+          { "fields": ["pitch", "part_tune"], "label": "PITCH", "join": " / " },
+          { "fields": ["cutoff", "resonance"], "label": "CUT/RES", "join": " / " },
+          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / " },
+          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / " },
+          { "field": "variation_send", "label": "VAR" },
+          { "fields": ["vibrato_depth", "vibrato_rate", "vibrato_delay"], "label": "VIB:D/R/D", "join": "/" },
+          { "fields": ["portamento_switch", "portamento_time"], "label": "PORTA", "join": "/" }
         ],
-        "system_fx": ["xg_reverb_type", "xg_chorus_type", "xg_variation_type"],
-        "master_output": ["master_tune", "transpose", "master_volume", "system_on"]
+        "system_fx": [
+          { "field": "xg_reverb_type", "label": "XG Reverb" },
+          { "field": "xg_chorus_type", "label": "XG Chorus" },
+          { "field": "xg_variation_type", "label": "XG Variation" }
+        ],
+        "master_output": [
+          { "field": "master_tune", "label": "Master Tune" },
+          { "field": "transpose", "label": "Transpose" },
+          { "field": "master_volume", "label": "Master Vol" },
+          { "field": "system_on", "label": "System On" }
+        ]
       }
     },
     "compact": {
       "geometry": { "min_width": 160, "min_height": 22, "page_size": 16, "channel_columns": 1 },
       "views": {
         "channels": [
-          { "field": "patch", "label": "PGN", "width": 28 },
-          { "field": "volume", "label": "VOL", "width": 7 },
-          { "field": "pan", "label": "PAN", "width": 7 },
-          { "field": "pitch", "label": "PITCH", "width": 8 },
-          { "field": "cutoff", "label": "CUT", "width": 8 },
-          { "field": "resonance", "label": "RES", "width": 8 },
-          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / ", "width": 17 },
-          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / ", "width": 14 },
-          { "field": "variation_send", "label": "VAR", "width": 8 },
-          { "field": "part_mode", "label": "MODE", "width": 8 },
-          { "fields": ["vibrato_depth", "vibrato_rate", "vibrato_delay"], "label": "VIB:D/R/D", "join": "/", "width": 17 },
-          { "field": "portamento_switch", "label": "PORTA", "width": 8 },
-          { "field": "part_tune", "label": "TUNE", "width": 7 }
+          { "field": "patch", "label": "PGN" },
+          { "field": "volume", "label": "VOL" },
+          { "field": "pan", "label": "PAN" },
+          { "field": "pitch", "label": "PITCH" },
+          { "field": "cutoff", "label": "CUT" },
+          { "field": "resonance", "label": "RES" },
+          { "fields": ["attack", "decay", "release"], "label": "A/D/R", "join": " / " },
+          { "fields": ["chorus_send", "reverb_send"], "label": "CHO/REV", "join": " / " },
+          { "field": "variation_send", "label": "VAR" },
+          { "fields": ["vibrato_depth", "vibrato_rate", "vibrato_delay"], "label": "VIB:D/R/D", "join": "/" },
+          { "field": "portamento_switch", "label": "PORTA" },
+          { "field": "part_tune", "label": "TUNE" }
         ]
       }
     },
@@ -45,8 +52,8 @@
       "geometry": { "min_width": 78, "min_height": 12, "page_size": 16, "channel_columns": 2 },
       "views": {
         "channels": [
-          { "field": "patch", "label": "PATCH", "width": 24 },
-          { "field": "volume", "label": "VOL", "width": 7 }
+          { "field": "patch", "label": "PATCH" },
+          { "field": "volume_bar" }
         ]
       }
     }

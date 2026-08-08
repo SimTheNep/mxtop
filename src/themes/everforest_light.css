@@ -1,0 +1,34 @@
+/* Everforest Light */
+:root {
+  --background: #fdf6e3;
+  --panel-border: #e0dcc7;
+  --text-primary: #5c6a72;
+  --text-dim: #939f91;
+  --footer-text: #939f91;
+  --header-title: #8da101;
+  --header-bpm: #dfa000;
+  --header-timesig: #35a77c;
+  --header-clock: #3a94c5;
+  --header-status: #8da101;
+  --table-header: #3a94c5;
+  --channel-active: #8da101;
+  --channel-inactive: #939f91;
+  --vu-low: #8da101;
+  --vu-mid: #dfa000;
+  --vu-high: #f85552;
+  --vu-peak: #5c6a72;
+  --fx-label: #df69ba;
+  --fx-value: #8da101;
+  --master-label: #f57d26;
+  --master-value: #5c6a72;
+  --log-sysex: #f85552;
+  --log-pc: #8da101;
+  --log-cc: #dfa000;
+  --log-tempo: #f57d26;
+  --log-timesig: #df69ba;
+  --activity-badge: #35a77c;
+  --activity-chord: #df69ba;
+  --load-poly: #8da101;
+  --load-ram: #dfa000;
+  --load-cpu: #3a94c5;
+}

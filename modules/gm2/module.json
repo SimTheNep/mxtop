@@ -9,6 +9,7 @@
         "sequence": ["cc0", "pc"],
         "fields": { "msb": 121, "program": 0 },
         "rhythm_channel": 10,
+        "bank_select": { "msb": "bank", "lsb": "variation" },
         "drum_msb": [120]
     },
 

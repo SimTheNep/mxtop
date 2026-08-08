@@ -15,6 +15,15 @@ enum class MidiMode {
     XG
 };
 
+// Metadata
+struct MidiMeta {
+    std::string songTitle = "Untitled MIDI";
+    double bpm = 120.0;
+    int timeSigNum = 4;
+    int timeSigDenom = 4;
+    double totalDurationMs = 0.0;
+};
+
 // SysEx detection rule loaded from module definitions
 struct DetectRule {
     std::string moduleFolder;
@@ -36,6 +45,10 @@ struct MidiReader {
     // Returns detected module folder path after loading
     std::optional<std::string> detectedModuleFolder() const {
         return detectedModuleFolder_;
+    }
+
+    const MidiMeta& metadata() const {
+        return meta_;
     }
 
     bool forceFront(RawEvent& out);
@@ -77,6 +90,9 @@ private:
     std::optional<std::string> detectSysEx(
         const RawEvent& ev
     );
+
+    // Metadata container
+    MidiMeta meta_;
 
     // Detected module folder path
     std::optional<std::string> detectedModuleFolder_;

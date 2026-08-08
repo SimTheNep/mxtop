@@ -1,0 +1,34 @@
+/* Hot Purple Traffic Light */
+:root {
+  --background: #100018;
+  --panel-border: #4d0066;
+  --text-primary: #ffffff;
+  --text-dim: #4d0066;
+  --footer-text: #4d0066;
+  --header-title: #00ff66;
+  --header-bpm: #ffff00;
+  --header-timesig: #00ffff;
+  --header-clock: #ff00ff;
+  --header-status: #00ff66;
+  --table-header: #00ffff;
+  --channel-active: #00ff66;
+  --channel-inactive: #4d0066;
+  --vu-low: #00ff66;
+  --vu-mid: #ffff00;
+  --vu-high: #ff0033;
+  --vu-peak: #ffffff;
+  --fx-label: #ff00ff;
+  --fx-value: #00ff66;
+  --master-label: #ffff00;
+  --master-value: #ffffff;
+  --log-sysex: #ff0033;
+  --log-pc: #00ff66;
+  --log-cc: #ffff00;
+  --log-tempo: #ff00ff;
+  --log-timesig: #00ffff;
+  --activity-badge: #00ffff;
+  --activity-chord: #ff00ff;
+  --load-poly: #00ff66;
+  --load-ram: #ffff00;
+  --load-cpu: #ff00ff;
+}

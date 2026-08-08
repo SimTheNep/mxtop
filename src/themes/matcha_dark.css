@@ -1,0 +1,34 @@
+/* Matcha Dark */
+:root {
+  --background: #141a18;
+  --panel-border: #222f2b;
+  --text-primary: #d3e0dc;
+  --text-dim: #435e58;
+  --footer-text: #435e58;
+  --header-title: #2eb398;
+  --header-bpm: #f29c38;
+  --header-timesig: #3498db;
+  --header-clock: #1abc9c;
+  --header-status: #2eb398;
+  --table-header: #3498db;
+  --channel-active: #2eb398;
+  --channel-inactive: #435e58;
+  --vu-low: #2eb398;
+  --vu-mid: #f29c38;
+  --vu-high: #e74c3c;
+  --vu-peak: #d3e0dc;
+  --fx-label: #9b59b6;
+  --fx-value: #2eb398;
+  --master-label: #e67e22;
+  --master-value: #d3e0dc;
+  --log-sysex: #e74c3c;
+  --log-pc: #2eb398;
+  --log-cc: #f29c38;
+  --log-tempo: #e67e22;
+  --log-timesig: #9b59b6;
+  --activity-badge: #1abc9c;
+  --activity-chord: #9b59b6;
+  --load-poly: #2eb398;
+  --load-ram: #f29c38;
+  --load-cpu: #3498db;
+}

@@ -1,0 +1,34 @@
+/* Catppuccin Macchiato */
+:root {
+  --background: #24273a;
+  --panel-border: #494d64;
+  --text-primary: #cad3f5;
+  --text-dim: #5b6078;
+  --footer-text: #5b6078;
+  --header-title: #a6da95;
+  --header-bpm: #eed49f;
+  --header-timesig: #91d7e3;
+  --header-clock: #8aadf4;
+  --header-status: #a6da95;
+  --table-header: #8aadf4;
+  --channel-active: #a6da95;
+  --channel-inactive: #5b6078;
+  --vu-low: #a6da95;
+  --vu-mid: #eed49f;
+  --vu-high: #ed8796;
+  --vu-peak: #f4dbd6;
+  --fx-label: #c6a0f6;
+  --fx-value: #a6da95;
+  --master-label: #f5a97f;
+  --master-value: #cad3f5;
+  --log-sysex: #ed8796;
+  --log-pc: #a6da95;
+  --log-cc: #eed49f;
+  --log-tempo: #f5a97f;
+  --log-timesig: #c6a0f6;
+  --activity-badge: #91d7e3;
+  --activity-chord: #c6a0f6;
+  --load-poly: #a6da95;
+  --load-ram: #eed49f;
+  --load-cpu: #8aadf4;
+}

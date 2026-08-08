@@ -8,7 +8,7 @@
 #include <string>
 
 namespace detail {
-    inline void writeToLog(const std::string& msg, bool appendNewline = false) {
+    inline void writeToLog(const std::string& msg, bool appendNewline = true) {
         // Clears old log file once per program run
         static bool firstCall = []() {
             std::ofstream cleanFile("debug.log", std::ios::trunc);
@@ -25,12 +25,12 @@ namespace detail {
     }
 }
 
-//std::string style
+// std::string style
 inline void logDbg(const std::string& msg) {
     detail::writeToLog(msg, true);
 }
 
-//printf style
+// printf style
 template <typename... Args>
 inline void logDbg(const char* format, Args... args) {
     int size_s = std::snprintf(nullptr, 0, format, args...);
@@ -42,8 +42,8 @@ inline void logDbg(const char* format, Args... args) {
 
     std::string msg(buf.data(), buf.data() + size_s);
 
-    // Write to file
-    detail::writeToLog(msg, false);
+    // Write to file with automatic newline
+    detail::writeToLog(msg, true);
 }
 
 #endif

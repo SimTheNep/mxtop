@@ -10,11 +10,12 @@
 #include <map>
 #include <optional>
 #include <array>
+#undef border
 
-class MidiUi {
+class DebugUi {
 public:
-    MidiUi(const std::vector<std::string>& files, const std::vector<std::string>& ports);
-    ~MidiUi();
+    DebugUi(const std::vector<std::string>& files, const std::vector<std::string>& ports);
+    ~DebugUi();
 
     void addEvent(const RawEvent& ev, bool debug = false);
     void addSnap(int channel, const takeSnapshot& snap, double timestampMs);

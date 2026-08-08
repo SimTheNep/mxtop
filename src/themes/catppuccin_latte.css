@@ -1,0 +1,34 @@
+/* Catppuccin Latte */
+:root {
+  --background: #eff1f5;
+  --panel-border: #bcc0cc;
+  --text-primary: #4c4f69;
+  --text-dim: #9ca0b0;
+  --footer-text: #9ca0b0;
+  --header-title: #40a02b;
+  --header-bpm: #df8e1d;
+  --header-timesig: #04a5e5;
+  --header-clock: #1e66f5;
+  --header-status: #40a02b;
+  --table-header: #1e66f5;
+  --channel-active: #40a02b;
+  --channel-inactive: #9ca0b0;
+  --vu-low: #40a02b;
+  --vu-mid: #df8e1d;
+  --vu-high: #d20f39;
+  --vu-peak: #4c4f69;
+  --fx-label: #8839ef;
+  --fx-value: #40a02b;
+  --master-label: #fe640b;
+  --master-value: #4c4f69;
+  --log-sysex: #d20f39;
+  --log-pc: #40a02b;
+  --log-cc: #df8e1d;
+  --log-tempo: #fe640b;
+  --log-timesig: #04a5e5;
+  --activity-badge: #04a5e5;
+  --activity-chord: #8839ef;
+  --load-poly: #40a02b;
+  --load-ram: #df8e1d;
+  --load-cpu: #1e66f5;
+}

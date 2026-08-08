@@ -1,0 +1,34 @@
+/* Monokai */
+:root {
+  --background: #272822;
+  --panel-border: #49483e;
+  --text-primary: #f8f8f2;
+  --text-dim: #75715e;
+  --footer-text: #75715e;
+  --header-title: #a6e22e;
+  --header-bpm: #e6db74;
+  --header-timesig: #66d9ef;
+  --header-clock: #66d9ef;
+  --header-status: #a6e22e;
+  --table-header: #66d9ef;
+  --channel-active: #a6e22e;
+  --channel-inactive: #75715e;
+  --vu-low: #a6e22e;
+  --vu-mid: #e6db74;
+  --vu-high: #f92672;
+  --vu-peak: #f8f8f2;
+  --fx-label: #ae81ff;
+  --fx-value: #a6e22e;
+  --master-label: #fd971f;
+  --master-value: #f8f8f2;
+  --log-sysex: #f92672;
+  --log-pc: #a6e22e;
+  --log-cc: #e6db74;
+  --log-tempo: #fd971f;
+  --log-timesig: #ae81ff;
+  --activity-badge: #66d9ef;
+  --activity-chord: #ae81ff;
+  --load-poly: #a6e22e;
+  --load-ram: #e6db74;
+  --load-cpu: #66d9ef;
+}

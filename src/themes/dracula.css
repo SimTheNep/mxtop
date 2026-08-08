@@ -1,0 +1,34 @@
+/* Dracula */
+:root {
+  --background: #282a36;
+  --panel-border: #6272a4;
+  --text-primary: #f8f8f2;
+  --text-dim: #6272a4;
+  --footer-text: #6272a4;
+  --header-title: #50fa7b;
+  --header-bpm: #f1fa8c;
+  --header-timesig: #ff79c6;
+  --header-clock: #8be9fd;
+  --header-status: #50fa7b;
+  --table-header: #bd93f9;
+  --channel-active: #50fa7b;
+  --channel-inactive: #6272a4;
+  --vu-low: #50fa7b;
+  --vu-mid: #f1fa8c;
+  --vu-high: #ff5555;
+  --vu-peak: #f8f8f2;
+  --fx-label: #bd93f9;
+  --fx-value: #50fa7b;
+  --master-label: #ffb86c;
+  --master-value: #f8f8f2;
+  --log-sysex: #ff5555;
+  --log-pc: #50fa7b;
+  --log-cc: #f1fa8c;
+  --log-tempo: #ffb86c;
+  --log-timesig: #ff79c6;
+  --activity-badge: #8be9fd;
+  --activity-chord: #ff79c6;
+  --load-poly: #50fa7b;
+  --load-ram: #ffb86c;
+  --load-cpu: #bd93f9;
+}

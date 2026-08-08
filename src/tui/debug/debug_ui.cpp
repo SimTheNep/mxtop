@@ -76,7 +76,7 @@ inline size_t kindToIndex(MsgKind k) {
 }
 
 // UI FUNCTS
-MidiUi::MidiUi(const std::vector<std::string>& files, const std::vector<std::string>& ports ) : files_(files), ports_(ports) {
+DebugUi::DebugUi(const std::vector<std::string>& files, const std::vector<std::string>& ports ) : files_(files), ports_(ports) {
     initscr();
     noecho();
     cbreak();
@@ -111,14 +111,14 @@ MidiUi::MidiUi(const std::vector<std::string>& files, const std::vector<std::str
     drawTable();
 }
 
-MidiUi::~MidiUi() {
+DebugUi::~DebugUi() {
     delwin(log_);
     delwin(labels_);
     delwin(info_);
     endwin();
 }
 
-std::string MidiUi::formatMessage(const RawEvent& ev) {
+std::string DebugUi::formatMessage(const RawEvent& ev) {
     switch (ev.kind) {
         case MsgKind::CC:
             return "CC " + std::to_string(ev.data.size() > 1 ? ev.data[1] : 0) +
@@ -153,7 +153,7 @@ std::string MidiUi::formatMessage(const RawEvent& ev) {
     }
 }
 
-void MidiUi::checkScrollInput() {
+void DebugUi::checkScrollInput() {
     int ch = getch();
     if (ch == KEY_UP) {
         scrollOffset_ = std::max(0, scrollOffset_ - 1);
@@ -166,7 +166,7 @@ void MidiUi::checkScrollInput() {
     }
 }
 
-void MidiUi::addEvent(const RawEvent& ev, bool) {
+void DebugUi::addEvent(const RawEvent& ev, bool) {
     lastTimestamp_ = ev.timestamp;
     latest_[kindToIndex(ev.kind)] = ev;
 
@@ -176,7 +176,7 @@ void MidiUi::addEvent(const RawEvent& ev, bool) {
     drawTable();
 }
 
-void MidiUi::drawInfo() {
+void DebugUi::drawInfo() {
     werase(info_);
     mvwprintw(info_, 0, 0, "mxtop MIDI reader debug - [ARROWS/PgUp/PgDn] Scroll | Ctrl+C Stop");
     mvwprintw(info_, 1, 0, "Current Timestamp: %.1f ms", lastTimestamp_);
@@ -213,14 +213,14 @@ void MidiUi::drawInfo() {
     wrefresh(info_);
 }
 
-void MidiUi::drawLabels() {
+void DebugUi::drawLabels() {
     werase(labels_);
     mvwprintw(labels_, 0, 0, "%-12s %-4s %-20s %s", "KIND", "CH", "MSG", "BYTES");
     mvwhline(labels_, 1, 0, ACS_HLINE, cols_);
     wrefresh(labels_);
 }
 
-void MidiUi::drawTable() {
+void DebugUi::drawTable() {
     werase(log_);
 
     int row = 0;
@@ -244,7 +244,7 @@ void MidiUi::drawTable() {
 }
 
 // STATE MODE
-void MidiUi::addSnap(int channel, const takeSnapshot& snap, double timestampMs) {
+void DebugUi::addSnap(int channel, const takeSnapshot& snap, double timestampMs) {
     lastTimestamp_ = timestampMs;
     stateSnapshots_[channel] = snap;
 
@@ -254,14 +254,14 @@ void MidiUi::addSnap(int channel, const takeSnapshot& snap, double timestampMs) 
     drawStateTable();
 }
 
-void MidiUi::drawStateLabels() {
+void DebugUi::drawStateLabels() {
     werase(labels_);
     mvwprintw(labels_, 0, 0, "%-8s %-24s %s", "TARGET", "OBJECT / FIELD", "STATE / DISPLAY VALUE");
     mvwhline(labels_, 1, 0, ACS_HLINE, cols_);
     wrefresh(labels_);
 }
 
-void MidiUi::drawStateTable() {
+void DebugUi::drawStateTable() {
     // Count exactly how many rows this frame needs before touching the pad
     int neededRows = 0;
     for (const auto& [channel, snap] : stateSnapshots_) {

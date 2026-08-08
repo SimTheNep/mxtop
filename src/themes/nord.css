@@ -1,0 +1,34 @@
+/* Nord */
+:root {
+  --background: #2e3440;
+  --panel-border: #4c566a;
+  --text-primary: #eceff4;
+  --text-dim: #4c566a;
+  --footer-text: #4c566a;
+  --header-title: #a3be8c;
+  --header-bpm: #ebcb8b;
+  --header-timesig: #88c0d0;
+  --header-clock: #81a1c1;
+  --header-status: #a3be8c;
+  --table-header: #88c0d0;
+  --channel-active: #a3be8c;
+  --channel-inactive: #4c566a;
+  --vu-low: #a3be8c;
+  --vu-mid: #ebcb8b;
+  --vu-high: #bf616a;
+  --vu-peak: #eceff4;
+  --fx-label: #b48ead;
+  --fx-value: #a3be8c;
+  --master-label: #d08770;
+  --master-value: #eceff4;
+  --log-sysex: #bf616a;
+  --log-pc: #a3be8c;
+  --log-cc: #ebcb8b;
+  --log-tempo: #d08770;
+  --log-timesig: #88c0d0;
+  --activity-badge: #88c0d0;
+  --activity-chord: #b48ead;
+  --load-poly: #a3be8c;
+  --load-ram: #ebcb8b;
+  --load-cpu: #81a1c1;
+}

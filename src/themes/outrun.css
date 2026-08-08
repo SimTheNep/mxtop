@@ -1,0 +1,34 @@
+/* Outrun */
+:root {
+  --background: #0d0e15;
+  --panel-border: #ff0055;
+  --text-primary: #00f0ff;
+  --text-dim: #3a3f58;
+  --footer-text: #3a3f58;
+  --header-title: #00ff66;
+  --header-bpm: #ffbe00;
+  --header-timesig: #ff0077;
+  --header-clock: #00f0ff;
+  --header-status: #00ff66;
+  --table-header: #00f0ff;
+  --channel-active: #00ff66;
+  --channel-inactive: #3a3f58;
+  --vu-low: #00ff66;
+  --vu-mid: #ffbe00;
+  --vu-high: #ff0055;
+  --vu-peak: #ffffff;
+  --fx-label: #9900ff;
+  --fx-value: #00ff66;
+  --master-label: #ffbe00;
+  --master-value: #00f0ff;
+  --log-sysex: #ff0055;
+  --log-pc: #00ff66;
+  --log-cc: #ffbe00;
+  --log-tempo: #9900ff;
+  --log-timesig: #ff0077;
+  --activity-badge: #00f0ff;
+  --activity-chord: #ff0077;
+  --load-poly: #00ff66;
+  --load-ram: #ffbe00;
+  --load-cpu: #00f0ff;
+}

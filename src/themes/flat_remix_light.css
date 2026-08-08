@@ -1,0 +1,34 @@
+/* Flat Remix Light */
+:root {
+  --background: #fafafa;
+  --panel-border: #e0e0e0;
+  --text-primary: #212121;
+  --text-dim: #9e9e9e;
+  --footer-text: #9e9e9e;
+  --header-title: #00c853;
+  --header-bpm: #ffd600;
+  --header-timesig: #00b8d4;
+  --header-clock: #2962ff;
+  --header-status: #00c853;
+  --table-header: #2962ff;
+  --channel-active: #00c853;
+  --channel-inactive: #9e9e9e;
+  --vu-low: #00c853;
+  --vu-mid: #ffd600;
+  --vu-high: #d50000;
+  --vu-peak: #212121;
+  --fx-label: #aa00ff;
+  --fx-value: #00c853;
+  --master-label: #ff6d00;
+  --master-value: #212121;
+  --log-sysex: #d50000;
+  --log-pc: #00c853;
+  --log-cc: #ffd600;
+  --log-tempo: #ff6d00;
+  --log-timesig: #aa00ff;
+  --activity-badge: #00b8d4;
+  --activity-chord: #aa00ff;
+  --load-poly: #00c853;
+  --load-ram: #ffd600;
+  --load-cpu: #2962ff;
+}

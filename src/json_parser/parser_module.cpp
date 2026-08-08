@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "../log.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -252,6 +253,9 @@ moduleDef parseModule(const json& j) {
 
         def.objects.push_back(obj);
     }
+
+    logDbg("[parser_module] Loaded module '%s' (%s) with %zu object(s)",
+        def.name.c_str(), def.id.c_str(), def.objects.size());
 
     return def;
 }

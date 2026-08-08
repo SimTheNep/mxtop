@@ -1,0 +1,34 @@
+/* Flexoki Dark */
+:root {
+  --background: #101010;
+  --panel-border: #282826;
+  --text-primary: #cecdc3;
+  --text-dim: #575653;
+  --footer-text: #575653;
+  --header-title: #879a39;
+  --header-bpm: #d0a215;
+  --header-timesig: #24837b;
+  --header-clock: #205ea6;
+  --header-status: #879a39;
+  --table-header: #205ea6;
+  --channel-active: #879a39;
+  --channel-inactive: #575653;
+  --vu-low: #879a39;
+  --vu-mid: #d0a215;
+  --vu-high: #d14d41;
+  --vu-peak: #cecdc3;
+  --fx-label: #a02f6f;
+  --fx-value: #879a39;
+  --master-label: #da702c;
+  --master-value: #cecdc3;
+  --log-sysex: #d14d41;
+  --log-pc: #879a39;
+  --log-cc: #d0a215;
+  --log-tempo: #da702c;
+  --log-timesig: #a02f6f;
+  --activity-badge: #24837b;
+  --activity-chord: #a02f6f;
+  --load-poly: #879a39;
+  --load-ram: #d0a215;
+  --load-cpu: #205ea6;
+}

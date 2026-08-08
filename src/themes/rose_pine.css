@@ -1,0 +1,34 @@
+/* Rosé Pine Soho */
+:root {
+  --background: #232136;
+  --panel-border: #44415a;
+  --text-primary: #e0def4;
+  --text-dim: #56526e;
+  --footer-text: #56526e;
+  --header-title: #9ccfd8;
+  --header-bpm: #f6c177;
+  --header-timesig: #c4a7e7;
+  --header-clock: #3e8fb0;
+  --header-status: #9ccfd8;
+  --table-header: #3e8fb0;
+  --channel-active: #9ccfd8;
+  --channel-inactive: #56526e;
+  --vu-low: #9ccfd8;
+  --vu-mid: #f6c177;
+  --vu-high: #eb6f92;
+  --vu-peak: #e0def4;
+  --fx-label: #c4a7e7;
+  --fx-value: #9ccfd8;
+  --master-label: #ea9a97;
+  --master-value: #e0def4;
+  --log-sysex: #eb6f92;
+  --log-pc: #9ccfd8;
+  --log-cc: #f6c177;
+  --log-tempo: #ea9a97;
+  --log-timesig: #c4a7e7;
+  --activity-badge: #3e8fb0;
+  --activity-chord: #c4a7e7;
+  --load-poly: #9ccfd8;
+  --load-ram: #f6c177;
+  --load-cpu: #3e8fb0;
+}

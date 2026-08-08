@@ -1,0 +1,34 @@
+/* Tokyo Night */
+:root {
+  --background: #1a1b26;
+  --panel-border: #414868;
+  --text-primary: #a9b1d6;
+  --text-dim: #565f89;
+  --footer-text: #565f89;
+  --header-title: #9ece6a;
+  --header-bpm: #e0af68;
+  --header-timesig: #bb9af7;
+  --header-clock: #7dcfff;
+  --header-status: #9ece6a;
+  --table-header: #7aa2f7;
+  --channel-active: #9ece6a;
+  --channel-inactive: #565f89;
+  --vu-low: #9ece6a;
+  --vu-mid: #e0af68;
+  --vu-high: #f7768e;
+  --vu-peak: #c0caf5;
+  --fx-label: #bb9af7;
+  --fx-value: #73daca;
+  --master-label: #ff9e64;
+  --master-value: #a9b1d6;
+  --log-sysex: #f7768e;
+  --log-pc: #9ece6a;
+  --log-cc: #e0af68;
+  --log-tempo: #ff9e64;
+  --log-timesig: #bb9af7;
+  --activity-badge: #73daca;
+  --activity-chord: #bb9af7;
+  --load-poly: #9ece6a;
+  --load-ram: #e0af68;
+  --load-cpu: #7aa2f7;
+}

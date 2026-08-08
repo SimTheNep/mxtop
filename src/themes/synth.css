@@ -1,0 +1,49 @@
+/* Cyberpunk Synth Theme - by Umbragloom */
+:root {
+  /* Global & Structural */
+  --background: #000b1e;
+  --panel-border: #d600ff;
+  --text-primary: #0abdc6;
+  --text-dim: #005080;
+  --footer-text: #00b8ff;
+
+  /* Header & Titles */
+  --header-title: #00ff9f;
+  --header-bpm: #bd00ff;
+  --header-timesig: #d600ff;
+  --header-clock: #00b8ff;
+  --header-status: #00ff9f;
+
+  /* Channel Table */
+  --table-header: #00b8ff;
+  --channel-active: #00ff9f;
+  --channel-inactive: #004070;
+
+  /* VU Meters */
+  --vu-low: #00ff9f;
+  --vu-mid: #00b8ff;
+  --vu-high: #d600ff;
+  --vu-peak: #ffffff;
+
+  /* System FX & Master Out */
+  --fx-label: #bd00ff;
+  --fx-value: #00ff9f;
+  --master-label: #d600ff;
+  --master-value: #0abdc6;
+
+  /* Event Log */
+  --log-sysex: #d600ff;
+  --log-pc: #00ff9f;
+  --log-cc: #00b8ff;
+  --log-tempo: #bd00ff;
+  --log-timesig: #d600ff;
+
+  /* Activity Grid */
+  --activity-badge: #00b8ff;
+  --activity-chord: #bd00ff;
+
+  /* System Load */
+  --load-poly: #00ff9f;
+  --load-ram: #00b8ff;
+  --load-cpu: #bd00ff;
+}
