@@ -19,7 +19,7 @@ menuReturn menuUi::run() {
         Element body = text("");
         if (activePane_ == Pane::Queue)    body = text("queue pane goes here");
         if (activePane_ == Pane::Settings) body = text("settings pane goes here");
-        if (activePane_ == Pane::Help)     body = text("help pane goes here");
+        if (activePane_ == Pane::Help)     body = renderHelp();
 
         return vbox({
             renderLogo(),
@@ -40,18 +40,6 @@ menuReturn menuUi::run() {
         if (ev == Event::Tab) {
             activePane_ = (activePane_ == Pane::Queue) ? Pane::Settings
                 : (activePane_ == Pane::Settings) ? Pane::Help : Pane::Queue;
-            return true;
-        }
-
-        if (ev == Event::ArrowLeft || ev == Event::Character('h')) {
-            activePane_ = (activePane_ == Pane::Settings) ? Pane::Queue
-                : (activePane_ == Pane::Help) ? Pane::Settings : activePane_;
-            return true;
-        }
-
-        if (ev == Event::ArrowRight || ev == Event::Character('l')) {
-            activePane_ = (activePane_ == Pane::Queue) ? Pane::Settings
-                : (activePane_ == Pane::Settings) ? Pane::Help : activePane_;
             return true;
         }
 
@@ -110,6 +98,45 @@ Element menuUi::renderTabs() const {
     });
 }
 
+// HELP PANE
+//
+//
+
+Element menuUi::renderHelp() const {
+    const auto palette = settings_.palette();
+
+    auto row = [&](const std::string& keys, const std::string& desc) {
+        return hbox({
+            text(keys) | color(palette.headerBpm) | bold | size(WIDTH, EQUAL, 22),
+            text(desc) | color(palette.textPrimary)
+        });
+    };
+
+    Elements lines = {
+        text("Menu") | color(palette.textDim) | bold,
+        row("Tab", "switch between Queue, Settings, Help"),
+        row("j / k / ↑ ↓", "move selection up/down"),
+        row("a", "add a MIDI file to the queue"),
+        row("0..9 / A..F", "assign ports 1..16 to the selected queue entry"),
+        row("d", "remove the selected queue entry"),
+        row("Enter", "start playback"),
+        row("q / Esc", "quit"),
+        text(""),
+        text("During playback") | color(palette.textDim) | bold,
+        row("h / l / ← →", "cycle port pages"),
+        row("j / k / ↑ ↓", "cycle channels"),
+        row("Shift + j / k / ↑ ↓", "cycle through the queue"),
+        row("x", "stop playback"),
+        row("p", "panic"),
+        row("r", "restart the current file"),
+        row("s", "solo channel"),
+        row("m", "mute channel"),
+        row("q / Esc", "quit")
+    };
+
+    return window(text(" HELP ") | bold, vbox(std::move(lines))) | color(palette.panelBorder) | flex;
+}
+
 // FOOTER
 //
 //
@@ -118,7 +145,7 @@ Element menuUi::renderFooter() const {
     const auto palette = settings_.palette();
 
     return hbox({
-        text(" [Tab] [h/l] [🡐/🡒] Navigation [q] Quit ") | color(palette.footerText),
+        text(" [Tab] Change tabs [q] Quit ") | color(palette.footerText),
         filler()
     });
 }

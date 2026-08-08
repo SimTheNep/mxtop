@@ -12,7 +12,7 @@
 // Entry in the MIDI queue
 struct queueSlot {
     std::string file;
-    unsigned int port = 0;
+    std::vector<unsigned int> ports;
 };
 
 // What main should do once MenuUi returns
@@ -38,7 +38,7 @@ public:
 private:
     enum class Pane { Queue, Settings, Help };
 
-    // Render
+    // RENDER
     ftxui::Element renderLogo() const;
     ftxui::Element renderTabs() const;
     ftxui::Element renderQueue() const;
@@ -46,13 +46,18 @@ private:
     ftxui::Element renderHelp() const;
     ftxui::Element renderFooter() const;
 
-    // Queue
+    // QUEUE HANDLING
     void addFile();
     void removeSelFile();
     void moveQueueUp();
     void moveQueueDown();
+    void movePortCursorLeft();
+    void movePortCursorRight();
+    void toggleSelPort();
+    void cyclePortLeft();
+    void cyclePortRight();
 
-    // Settings
+    // SETTINGS HANDLING
     void cycleSettingLeft();
     void cycleSettingRight();
 
@@ -64,6 +69,7 @@ private:
     Pane activePane_ = Pane::Queue;
     int queueCursor_ = 0;
     int settingsCursor_ = 0;
+    int portCursor_ = 0;
 
     bool addingFile_ = false;
     std::string fileInputBuf_;
